@@ -1,0 +1,418 @@
+name: Continuous Integration and Release
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ["v*"]
+    paths-ignore:
+      - "**/*.md"
+      - "**/docs/**"
+      - "**/.github/**"
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  skip-ci-check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - name: Check for skip keywords in commit messages
+        id: skip_check
+        run: |
+          # Check various skip patterns
+          SKIP_PATTERNS=("[skip ci]" "[ci skip]" "[skip actions]" "[actions skip]")
+
+          # Check head commit message
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          echo "Head commit message: $COMMIT_MESSAGE"
+
+          # Check first commit message (for push events)
+          FIRST_COMMIT_MESSAGE="${{ github.event.commits[0].message }}"
+          echo "First commit message: $FIRST_COMMIT_MESSAGE"
+
+          # Check PR title (for pull_request events)
+          PR_TITLE="${{ github.event.pull_request.title }}"
+          echo "PR title: $PR_TITLE"
+
+          # Check if any pattern matches
+          should_skip=false
+          for pattern in "${SKIP_PATTERNS[@]}"; do
+            if [[ "$COMMIT_MESSAGE" == *"$pattern"* ]] ||
+               [[ "$FIRST_COMMIT_MESSAGE" == *"$pattern"* ]] ||
+               [[ "$PR_TITLE" == *"$pattern"* ]]; then
+              should_skip=true
+              break
+            fi
+          done
+
+          if [ "$should_skip" = true ]; then
+            echo "should_skip=true" >> $GITHUB_OUTPUT
+            echo "⏭️  Skipping CI due to skip pattern detected"
+          else
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+            echo "✅ Proceeding with CI"
+          fi
+
+      - name: Never skip CI for tags
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          echo "should_skip=false" >> $GITHUB_OUTPUT
+          echo "✅ Tag detected - proceeding with CI"
+
+  # Comprehensive testing across Node versions
+  test:
+    name: Test (Node ${{ matrix.node-version }})
+    runs-on: ubuntu-latest
+    needs: skip-ci-check
+    if: needs.skip-ci-check.outputs.should_skip == 'false'
+    strategy:
+      matrix:
+        node-version: [16.x, 18.x, 20.x]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run linter and auto-fix
+        run: |
+          echo "🔧 Auto-fixing linting issues..."
+          npm run lint:fix
+
+          echo "📋 Checking for remaining linting issues..."
+          if npm run lint; then
+            echo "✅ All linting issues resolved"
+          else
+            echo "⚠️  Some linting issues require manual attention"
+            echo "Run 'npm run lint' to see details. Continuing workflow..."
+          fi
+
+      - name: Check and auto-fix formatting
+        run: |
+          echo "Running auto-formatter..."
+          npm run format
+
+          echo "Verifying formatting..."
+          if npm run format-check; then
+            echo "✅ Formatting is correct"
+          else
+            echo "⚠️  Some formatting issues remain after auto-fix"
+            npm run format-check 2>&1 | grep -E "(error|Warning)" | head -5 || true
+            echo "Continuing workflow..."
+          fi
+
+      - name: Build project
+        run: npm run package
+
+      - name: Run tests with coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: kodelint/blogs-publisher
+
+  # Build and package for distribution
+  build-and-package:
+    runs-on: ubuntu-latest
+    needs:
+      - skip-ci-check
+      - test
+    if: needs.skip-ci-check.outputs.should_skip == 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build and package
+        run: npm run package
+
+      - name: Verify Dist is up-to-date
+        run: |
+          npm run package
+          if ! git diff --quiet -- dist/; then
+            echo "Error: dist/ folder is not up-to-date with source changes"
+            echo "Run 'npm run package' and commit the changes"
+            exit 1
+          fi
+
+      - name: Upload dist artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+  # Integration test for PRs
+  integration-test:
+    runs-on: ubuntu-latest
+    needs:
+      - skip-ci-check
+      - build-and-package
+    if: |
+      needs.skip-ci-check.outputs.should_skip == 'false' &&
+      github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download dist artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist/
+
+      - name: Test action (dry run)
+        uses: ./
+        with:
+          medium-token: "test-token"
+          devto-token: "test-token"
+          hashnode-token: "test-token"
+          dry-run: "true"
+
+  # Security checks
+  security-check:
+    runs-on: ubuntu-latest
+    needs: skip-ci-check
+    if: needs.skip-ci-check.outputs.should_skip == 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security audit (continue on)
+        run: |
+          npm audit --audit-level=high || \
+            if [ $? -eq 1 ]; then
+              echo "High or critical severity vulnerabilities found!, continuing..."
+            else
+              echo "Audit completed with fixable issues, continuing..."
+            fi
+
+  # Quality metrics
+  quality-metrics:
+    runs-on: ubuntu-latest
+    needs:
+      - skip-ci-check
+      - test
+    if: needs.skip-ci-check.outputs.should_skip == 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate gzipped bundle for size check
+        run: |
+          if [ -f "dist/index.js" ]; then
+            echo "Creating gzipped version for size check..."
+            gzip -c dist/index.js > dist/index.js.gz
+            echo "✅ Created dist/index.js.gz"
+            echo "File sizes:"
+            ls -lh dist/
+          else
+            echo "❌ dist/index.js not found - cannot check bundle size, continuing..."
+          fi
+
+      - name: Check bundle size
+        run: npm run size
+
+      - name: Check dependencies
+        run: |
+          npm run deps:check || \
+            if [ $? -eq 1 ]; then
+              echo "❌ Outdated packages found! Run 'npm run deps:check' to identify and upgrade"
+              echo "Continuing..."
+            else
+              echo "✅ No outdated packages found!"
+            fi
+
+      - name: Run Snyk security scan
+        run: |
+          npm run vulnerabilities:check || \
+            if [ $? -eq 1 ]; then
+              echo "❌ High or critical severity vulnerabilities found using external service!, continuing..."
+            else
+              echo "✅ Audit completed with fixable issues, continuing..."
+            fi
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  # Code quality checks
+  code-quality:
+    runs-on: ubuntu-latest
+    needs: skip-ci-check
+    if: needs.skip-ci-check.outputs.should_skip == 'false'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check code complexity
+        run: npx complexity-report --maxcc 10 --ignorePattern ".*test.*|.*spec.*" src/
+
+      - name: Check for TypeScript errors
+        run: npx tsc --noEmit --strict
+
+      - name: Check for dead code
+        run: npx ts-prune --ignore "test|spec|__tests__|__mocks__"
+
+  # GitHub-only Semantic Release (no npm)
+  semantic-release:
+    name: Semantic Release (GitHub Only)
+    runs-on: ubuntu-latest
+    needs:
+      - skip-ci-check
+      - test
+      - security-check
+      - quality-metrics
+    if: |
+      needs.skip-ci-check.outputs.should_skip == 'false' &&
+      github.event_name == 'push' &&
+      github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build package
+        run: npm run package
+
+      - name: Run Semantic Release (GitHub only)
+        env:
+          GITHUB_TOKEN: ${{ secrets.TOKEN }}
+        run: npx semantic-release
+
+  # Handle manual tag releases (for GitHub Marketplace)
+  manual-release:
+    name: Manual Tag Release
+    runs-on: ubuntu-latest
+    needs:
+      - skip-ci-check
+      - test
+      - build-and-package
+    if: |
+      needs.skip-ci-check.outputs.should_skip == 'false' &&
+      github.event_name == 'push' &&
+      startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.x"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests
+        run: npm test
+
+      - name: Build and package
+        run: npm run package
+
+      - name: Get tag name
+        id: get_tag
+        run: echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.get_tag.outputs.TAG_NAME }}
+          name: Release ${{ steps.get_tag.outputs.TAG_NAME }}
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          body: |
+            ## Changes in ${{ steps.get_tag.outputs.TAG_NAME }}
+
+            * See [CHANGELOG.md](CHANGELOG.md) for detailed changes
+
+            ## Usage
+
+            ```yaml
+            - name: Publish blogs
+              uses: kodelint/blogs-publisher@${{ steps.get_tag.outputs.TAG_NAME }}
+              with:
+                medium-token: ${{ secrets.MEDIUM_TOKEN }}
+                devto-token: ${{ secrets.DEVTO_TOKEN }}
+                hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
+            ```
+          files: |
+            dist/**
+            action.yml
+            README.md
+            LICENSE
+
+      - name: Update major version tag
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          TAG_NAME=${{ steps.get_tag.outputs.TAG_NAME }}
+          VERSION=${TAG_NAME#v}
+          MAJOR=$(echo $VERSION | cut -d. -f1)
+          git tag -fa "v$MAJOR" -m "Update v$MAJOR to point to $TAG_NAME"
+          git push origin "v$MAJOR" --force

@@ -1,0 +1,51 @@
+name: "Blogs Publisher"
+description: "Publish Markdown blogs to Medium, Dev.to, and Hashnode"
+author: "kodelint"
+inputs:
+  medium-token:
+    description: "Medium Integration Token"
+    required: false
+  devto-token:
+    description: "Dev.to API Key"
+    required: false
+  hashnode-token:
+    description: "Hashnode Personal Access Token"
+    required: false
+  hashnode-publication-id:
+    description: "Hashnode Publication ID (optional)"
+    required: false
+  medium-path:
+    description: "Path pattern for Medium posts"
+    required: false
+    default: "posts/medium"
+  devto-path:
+    description: "Path pattern for Dev.to posts"
+    required: false
+    default: "posts/devto"
+  hashnode-path:
+    description: "Path pattern for Hashnode posts"
+    required: false
+    default: "posts/hashnode"
+  use-commit-message:
+    description: "Use commit message to determine platform (true/false)"
+    required: false
+    default: "false"
+  dry-run:
+    description: "Run in dry-run mode without publishing"
+    required: false
+    default: "false"
+  posts-directory:
+    description: "Base directory for posts"
+    required: false
+    default: "."
+outputs:
+  published-posts:
+    description: "JSON array of successfully published posts"
+  failed-posts:
+    description: "JSON array of posts that failed to publish"
+runs:
+  using: "node20"
+  main: "dist/index.js"
+branding:
+  icon: "edit-3"
+  color: "blue"

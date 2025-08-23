@@ -1,0 +1,5 @@
+# Snyk (https://snyk.io) policy file.
+# Allows Snyk to open pull requests to apply the rules below to this repo.
+version: v1.22.0
+ignore: {}
+patch: {}
