@@ -17,29 +17,35 @@ jobs:
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
-      - name: Check for skip keywords (NEVER skip for tags)
+      - name: Determine if CI should be skipped
         id: skip_check
-        env:
-          REF_TYPE: ${{ github.ref_type }}
-          REF: ${{ github.ref }}
-          COMMIT_MSG: ${{ github.event.head_commit.message || '' }}
-          PR_TITLE: ${{ github.event.pull_request.title || '' }}
         run: |
-          # CRITICAL: NEVER skip CI for tag pushes
-          if [[ "$REF_TYPE" == "tag" ]]; then
-            echo "🏷️  TAG DETECTED: $REF"
-            echo "✅ Tags always trigger CI for releases - NEVER skipping"
+          echo "=== CI Skip Check Debug ==="
+          echo "Event: ${{ github.event_name }}"
+          echo "Ref: ${{ github.ref }}"
+          echo "Ref Type: ${{ github.ref_type }}"
+          
+          # RULE 1: NEVER SKIP CI FOR TAGS
+          if [[ "${{ github.ref_type }}" == "tag" ]] || [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            echo "🏷️  TAG DETECTED - NEVER SKIPPING CI FOR RELEASES"
+            echo "Tag: ${{ github.ref }}"
             echo "should_skip=false" >> $GITHUB_OUTPUT
+            echo "✅ Proceeding with CI for tag release"
             exit 0
           fi
           
+          # RULE 2: For non-tag events, check skip patterns
           echo "Checking skip patterns for non-tag event..."
+          
+          COMMIT_MSG="${{ github.event.head_commit.message || '' }}"
+          PR_TITLE="${{ github.event.pull_request.title || '' }}"
+          
           echo "Commit message: '$COMMIT_MSG'"
           echo "PR title: '$PR_TITLE'"
           
-          # Only check skip patterns for non-tag pushes and PRs
           should_skip=false
           
+          # Check for skip patterns in current commit/PR only
           if [[ "$COMMIT_MSG" == *"[skip ci]"* ]] || 
              [[ "$COMMIT_MSG" == *"[ci skip]"* ]] || 
              [[ "$COMMIT_MSG" == *"[skip actions]"* ]] || 
@@ -49,13 +55,13 @@ jobs:
              [[ "$PR_TITLE" == *"[skip actions]"* ]] || 
              [[ "$PR_TITLE" == *"[actions skip]"* ]]; then
             should_skip=true
-            echo "⏭️  Skip pattern detected in commit/PR"
+            echo "⏭️  Skip pattern found in current commit/PR"
           fi
           
           echo "should_skip=$should_skip" >> $GITHUB_OUTPUT
           
           if [ "$should_skip" = true ]; then
-            echo "⏭️  Skipping CI due to skip pattern (non-tag event)"
+            echo "⏭️  Skipping CI due to skip pattern in current event"
           else
             echo "✅ Proceeding with CI"
           fi
