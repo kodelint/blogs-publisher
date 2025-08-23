@@ -20,6 +20,7 @@ export interface BlogPost {
   description?: string;
   cover_image?: string;
   published?: boolean;
+  publishedAt?: string;
   series?: string;
   [key: string]: any;
 }

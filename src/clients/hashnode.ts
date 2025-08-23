@@ -33,8 +33,10 @@ export class HashnodeClient {
     // Handle publishedAt date conversion
     let publishedAt: string | undefined;
     if (blogPost.publishedAt) {
-      // Convert to ISO string format that Hashnode expects
       publishedAt = new Date(blogPost.publishedAt).toISOString();
+    } else if (blogPost.date) {
+      // Some Markdown processors might use 'date' instead of 'publishedAt'
+      publishedAt = new Date(blogPost.date).toISOString();
     }
 
     return {
