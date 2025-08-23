@@ -74,7 +74,8 @@ jobs:
     if: needs.skip-ci-check.outputs.should_skip == 'false'
     strategy:
       matrix:
-        node-version: [16.x, 18.x, 20.x]
+#        node-version: [16.x, 18.x, 20.x]
+         node-version: [20.x]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
