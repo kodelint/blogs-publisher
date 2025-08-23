@@ -48,7 +48,7 @@ export interface DevToPost {
   organization_id?: number;
 }
 
-export interface HashNodePost {
+export interface HashnodePost {
   title: string;
   contentMarkdown: string;
   tags?: { name: string }[];
@@ -59,6 +59,22 @@ export interface HashNodePost {
   disableComments?: boolean;
   publicationId?: string;
   originalArticleURL?: string;
+}
+
+export interface HashnodePostResponse {
+  id: string;
+  title: string;
+  slug: string;
+  url: string;
+  contentMarkdown?: string;
+  tags?: Array<{ name: string; slug: string }>;
+  coverImage?: { url: string };
+  subtitle?: string;
+  dateAdded?: string;
+  author?: {
+    username: string;
+    name: string;
+  };
 }
 
 export interface PublishResult {
