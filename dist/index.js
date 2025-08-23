@@ -141,7 +141,7 @@ class HashnodeClient {
         this.client = axios_1.default.create({
             baseURL: "https://gql.hashnode.com",
             headers: {
-                Authorization: token,
+                Authorization: this.token,
                 "Content-Type": "application/json",
             },
         });
@@ -154,14 +154,27 @@ class HashnodeClient {
             .replace(/-+/g, "-")
             .trim();
     }
+    // Convert BlogPost to HashnodePost format
+    convertToHashnodePost(blogPost, publicationId) {
+        const slug = blogPost.slug || this.generateSlug(blogPost.title);
+        return {
+            title: blogPost.title,
+            contentMarkdown: blogPost.content,
+            tags: blogPost.tags.map((tag) => ({ name: tag })),
+            coverImageURL: blogPost.cover_image,
+            slug,
+            subtitle: blogPost.description,
+            originalArticleURL: blogPost.canonical_url,
+            publicationId,
+            disableComments: false,
+        };
+    }
     async publishPost(blogPost, publicationId) {
         try {
-            // Validate that publication ID is provided
-            const actualPublicationId = publicationId;
-            if (!actualPublicationId) {
+            if (!publicationId) {
                 throw new Error("Hashnode publication ID not provided");
             }
-            const slug = blogPost.slug || this.generateSlug(blogPost.title);
+            const hashnodePost = this.convertToHashnodePost(blogPost, publicationId);
             const mutation = `
         mutation PublishPost($input: PublishPostInput!) {
           publishPost(input: $input) {
@@ -176,26 +189,26 @@ class HashnodeClient {
       `;
             const variables = {
                 input: {
-                    title: blogPost.title,
-                    contentMarkdown: blogPost.content,
-                    tags: blogPost.tags.map((tag) => ({
-                        name: tag,
-                        slug: tag.toLowerCase().replace(/\s+/g, "-"),
+                    title: hashnodePost.title,
+                    contentMarkdown: hashnodePost.contentMarkdown,
+                    tags: hashnodePost.tags?.map((tag) => ({
+                        name: tag.name,
+                        slug: tag.name.toLowerCase().replace(/\s+/g, "-"),
                     })),
-                    slug,
-                    coverImageOptions: blogPost.cover_image
+                    slug: hashnodePost.slug,
+                    coverImageOptions: hashnodePost.coverImageURL
                         ? {
-                            coverImageURL: blogPost.cover_image,
+                            coverImageURL: hashnodePost.coverImageURL,
                         }
                         : undefined,
-                    subtitle: blogPost.description,
-                    publicationId: actualPublicationId,
-                    originalArticleURL: blogPost.canonical_url,
-                    disableComments: false,
+                    subtitle: hashnodePost.subtitle,
+                    publicationId: hashnodePost.publicationId,
+                    originalArticleURL: hashnodePost.originalArticleURL,
+                    disableComments: hashnodePost.disableComments,
                     metaTags: {
-                        title: blogPost.title,
-                        description: blogPost.description,
-                        image: blogPost.cover_image,
+                        title: hashnodePost.title,
+                        description: hashnodePost.subtitle,
+                        image: hashnodePost.coverImageURL,
                     },
                 },
             };
@@ -225,29 +238,29 @@ class HashnodeClient {
     async getPost(slug) {
         try {
             const query = `
-        query GetPost($slug: String!) {
-          post(slug: $slug) {
-            id
-            title
-            slug
-            url
-            contentMarkdown
-            tags {
-              name
-              slug
-            }
-            coverImage {
-              url
-            }
-            subtitle
-            dateAdded
-            author {
-              username
-              name
-            }
-          }
-        }
-      `;
+              query GetPost($slug: String!) {
+                post(slug: $slug) {
+                  id
+                  title
+                  slug
+                  url
+                  contentMarkdown
+                  tags {
+                    name
+                    slug
+                  }
+                  coverImage {
+                    url
+                  }
+                  subtitle
+                  dateAdded
+                  author {
+                    username
+                    name
+                  }
+                }
+              }
+            `;
             const response = await this.client.post("", {
                 query,
                 variables: { slug },
