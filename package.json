@@ -4,6 +4,7 @@
   "description": "A GitHub Action to publish markdown blog posts to Medium, Dev.to, and Hashnode platform",
   "main": "dist/index.js",
   "scripts": {
+    "prep": "ts-node scripts/prep.ts",
     "build": "tsc",
     "package": "npm run build && ncc build lib/main.js -o dist --minify --source-map --license licenses.txt",
     "test": "jest",
@@ -84,6 +85,7 @@
     "prettier": "^3.0.0",
     "snyk": "^1.1202.0",
     "ts-jest": "^29.1.1",
+    "ts-node": "^10.9.0",
     "ts-prune": "^0.10.3",
     "typescript": "^5.1.6"
   },
