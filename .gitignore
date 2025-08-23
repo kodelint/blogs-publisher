@@ -8,7 +8,7 @@ yarn-error.log*
 lib/
 
 # Coverage reports
-coverage
+coverage/
 .nyc_output/
 !coverage/badge.svg
 
