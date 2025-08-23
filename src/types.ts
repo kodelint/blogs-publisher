@@ -35,7 +35,7 @@ export interface MediumPost {
   canonicalUrl?: string;
 }
 
-export interface DevtoPost {
+export interface DevToPost {
   title: string;
   body_markdown: string;
   published?: boolean;
@@ -48,7 +48,7 @@ export interface DevtoPost {
   organization_id?: number;
 }
 
-export interface HashnodePost {
+export interface HashNodePost {
   title: string;
   contentMarkdown: string;
   tags?: { name: string }[];

@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from "axios";
-import { BlogPost, DevtoPost } from "../types";
+import { BlogPost, DevToPost } from "../types";
 
 export class DevtoClient {
   private client: AxiosInstance;
@@ -16,7 +16,7 @@ export class DevtoClient {
 
   async publishPost(blogPost: BlogPost): Promise<{ id: number; url: string }> {
     try {
-      const devtoPost: DevtoPost = {
+      const devtoPost: DevToPost = {
         title: blogPost.title,
         body_markdown: blogPost.content,
         published: blogPost.published !== false,
@@ -81,7 +81,7 @@ export class DevtoClient {
     blogPost: BlogPost,
   ): Promise<{ id: number; url: string }> {
     try {
-      const devtoPost: DevtoPost = {
+      const devtoPost: DevToPost = {
         title: blogPost.title,
         body_markdown: blogPost.content,
         published: blogPost.published !== false,
