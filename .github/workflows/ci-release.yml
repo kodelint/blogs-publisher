@@ -17,35 +17,42 @@ jobs:
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
-      - name: Check for skip keywords in commit messages
+      - name: Check for skip keywords
         id: skip_check
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || '' }}
+          PR_TITLE: ${{ github.event.pull_request.title || '' }}
+          REF_TYPE: ${{ github.ref_type }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          # Check various skip patterns
-          SKIP_PATTERNS=("[skip ci]" "[ci skip]" "[skip actions]" "[actions skip]")
-
-          # Check head commit message
-          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
-          echo "Head commit message: $COMMIT_MESSAGE"
-
-          # Check first commit message (for push events)
-          FIRST_COMMIT_MESSAGE="${{ github.event.commits[0].message }}"
-          echo "First commit message: $FIRST_COMMIT_MESSAGE"
-
-          # Check PR title (for pull_request events)
-          PR_TITLE="${{ github.event.pull_request.title }}"
-          echo "PR title: $PR_TITLE"
-
-          # Check if any pattern matches
+          # For tag pushes, never skip CI
+          if [[ "$REF_TYPE" == "tag" ]]; then
+            echo "This is a tag push - never skipping CI for releases"
+            echo "should_skip=false" >> $GITHUB_OUTPUT
+            echo "✅ Proceeding with CI for tag: ${{ github.ref }}"
+            exit 0
+          fi
+          
+          echo "Event: $EVENT_NAME"
+          echo "Commit message: '$COMMIT_MESSAGE'"
+          echo "PR title: '$PR_TITLE'"
+          
+          # Check for skip patterns
           should_skip=false
-          for pattern in "${SKIP_PATTERNS[@]}"; do
-            if [[ "$COMMIT_MESSAGE" == *"$pattern"* ]] ||
-               [[ "$FIRST_COMMIT_MESSAGE" == *"$pattern"* ]] ||
-               [[ "$PR_TITLE" == *"$pattern"* ]]; then
-              should_skip=true
-              break
-            fi
-          done
-
+          
+          # Define patterns as a simple string for easier checking
+          if [[ "$COMMIT_MESSAGE" == *"[skip ci]"* ]] || 
+             [[ "$COMMIT_MESSAGE" == *"[ci skip]"* ]] || 
+             [[ "$COMMIT_MESSAGE" == *"[skip actions]"* ]] || 
+             [[ "$COMMIT_MESSAGE" == *"[actions skip]"* ]] ||
+             [[ "$PR_TITLE" == *"[skip ci]"* ]] || 
+             [[ "$PR_TITLE" == *"[ci skip]"* ]] || 
+             [[ "$PR_TITLE" == *"[skip actions]"* ]] || 
+             [[ "$PR_TITLE" == *"[actions skip]"* ]]; then
+            should_skip=true
+            echo "Skip pattern detected"
+          fi
+          
           if [ "$should_skip" = true ]; then
             echo "should_skip=true" >> $GITHUB_OUTPUT
             echo "⏭️  Skipping CI due to skip pattern detected"
@@ -315,6 +322,10 @@ jobs:
       contents: write
       issues: write
       pull-requests: write
+      actions: read
+    outputs:
+      new-release-published: ${{ steps.semantic.outputs.new-release-published }}
+      new-release-version: ${{ steps.semantic.outputs.new-release-version }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -334,10 +345,42 @@ jobs:
       - name: Build package
         run: npm run package
 
+      - name: Verify dist is up-to-date
+        run: |
+          if ! git diff --quiet -- dist/; then
+            echo "Adding updated dist files to git"
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add dist/
+            git commit -m "chore: update dist files [skip ci]"
+          fi
+
       - name: Run Semantic Release (GitHub only)
+        id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-        run: npx semantic-release
+          NPM_TOKEN: "" # Explicitly empty to prevent npm publishing
+        run: |
+          echo "Running semantic-release for GitHub-only release..."
+          npx semantic-release
+
+      - name: Create major version tag
+        if: steps.semantic.outputs.new-release-published == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Get the new version
+          NEW_VERSION="${{ steps.semantic.outputs.new-release-version }}"
+          MAJOR=$(echo $NEW_VERSION | cut -d. -f1)
+          
+          echo "Creating/updating major version tag v$MAJOR for version $NEW_VERSION"
+          
+          # Create or update the major version tag
+          git tag -fa "v$MAJOR" -m "Update v$MAJOR to point to v$NEW_VERSION"
+          git push origin "v$MAJOR" --force
+          
+          echo "✅ Updated v$MAJOR tag to point to v$NEW_VERSION"
 
   # Handle manual tag releases (for GitHub Marketplace)
   manual-release:
