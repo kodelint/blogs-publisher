@@ -166,14 +166,14 @@ class HashnodeClient {
         return {
             title: blogPost.title,
             contentMarkdown: blogPost.content,
-            tags: blogPost.tags.map((tag) => ({ name: tag })),
+            tags: blogPost.tags.map(tag => ({ name: tag })),
             coverImageURL: blogPost.cover_image, // Map cover_image to coverImageURL
             slug,
             subtitle: blogPost.subtitle || blogPost.description, // Use subtitle if available, fallback to description
             originalArticleURL: blogPost.canonical_url,
             publicationId,
             disableComments: false,
-            publishedAt, // Add publishedAt field
+            publishedAt,
         };
     }
     async publishPost(blogPost, publicationId) {

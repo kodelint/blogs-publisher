@@ -47,7 +47,7 @@ export class HashnodeClient {
       originalArticleURL: blogPost.canonical_url,
       publicationId,
       disableComments: false,
-      publishedAt, // Add publishedAt field
+      publishedAt,
     };
   }
 
