@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/kodelint/blogs-publisher/compare/v1.0.2...v1.0.3) (2025-08-23)
+
+
+### Bug Fixes
+
+* fix for hashnode publishedAt property ([849be32](https://github.com/kodelint/blogs-publisher/commit/849be32891cb83c1f75183b7ea4a5dbf53e5974c))
+
 ## [1.0.2](https://github.com/kodelint/blogs-publisher/compare/v1.0.1...v1.0.2) (2025-08-23)
 
 
