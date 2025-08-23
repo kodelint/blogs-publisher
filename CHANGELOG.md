@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/kodelint/blogs-publisher/compare/v1.0.1...v1.0.2) (2025-08-23)
+
+
+### Bug Fixes
+
+* forgot to dist update and hashnode update ([30e4408](https://github.com/kodelint/blogs-publisher/commit/30e44085fc3e7b546c442973e4277985aa6ce4d4))
+
 ## [1.0.1](https://github.com/kodelint/blogs-publisher/compare/v1.0.0...v1.0.1) (2025-08-23)
 
 
