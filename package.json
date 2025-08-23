@@ -118,6 +118,64 @@
         "name": "develop",
         "prerelease": true
       }
+    ],
+    "npm": false,
+    "repositoryUrl": "https://github.com/kodelint/blogs-publisher",
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      [
+        "@semantic-release/changelog",
+        {
+          "changelogFile": "CHANGELOG.md"
+        }
+      ],
+      [
+        "@semantic-release/exec",
+        {
+          "prepareCmd": "npm run package && echo 'Built and packaged for release'"
+        }
+      ],
+      [
+        "@semantic-release/github",
+        {
+          "assets": [
+            {
+              "path": "dist/**",
+              "label": "Distribution files"
+            },
+            {
+              "path": "action.yml",
+              "label": "Action configuration"
+            },
+            {
+              "path": "README.md",
+              "label": "Documentation"
+            },
+            {
+              "path": "CHANGELOG.md",
+              "label": "Changelog"
+            }
+          ],
+          "successComment": false,
+          "failComment": false,
+          "failTitle": false,
+          "labels": false,
+          "releasedLabels": false
+        }
+      ],
+      [
+        "@semantic-release/git",
+        {
+          "assets": [
+            "CHANGELOG.md",
+            "package.json",
+            "package-lock.json",
+            "dist/**"
+          ],
+          "message": "chore(release): ${nextRelease.version} [skip ci]\n\n${nextRelease.notes}"
+        }
+      ]
     ]
   }
 }

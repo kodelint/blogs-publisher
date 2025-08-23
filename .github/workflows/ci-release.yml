@@ -359,10 +359,13 @@ jobs:
         id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          NPM_TOKEN: "" # Explicitly empty to prevent npm publishing
+          # Explicitly disable npm publishing
+          NPM_CONFIG_FUND: false
+          NPM_CONFIG_AUDIT: false
         run: |
           echo "Running semantic-release for GitHub-only release..."
-          npx semantic-release
+          echo "NPM publishing is disabled via configuration"
+          npx semantic-release --no-ci
 
       - name: Create major version tag
         if: steps.semantic.outputs.new-release-published == 'true'
@@ -381,6 +384,7 @@ jobs:
           git push origin "v$MAJOR" --force
           
           echo "✅ Updated v$MAJOR tag to point to v$NEW_VERSION"
+
 
   # Handle manual tag releases (for GitHub Marketplace)
   manual-release:
