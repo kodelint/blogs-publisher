@@ -17,55 +17,48 @@ jobs:
     outputs:
       should_skip: ${{ steps.skip_check.outputs.should_skip }}
     steps:
-      - name: Check for skip keywords
+      - name: Check for skip keywords (NEVER skip for tags)
         id: skip_check
         env:
-          COMMIT_MESSAGE: ${{ github.event.head_commit.message || '' }}
-          PR_TITLE: ${{ github.event.pull_request.title || '' }}
           REF_TYPE: ${{ github.ref_type }}
-          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          COMMIT_MSG: ${{ github.event.head_commit.message || '' }}
+          PR_TITLE: ${{ github.event.pull_request.title || '' }}
         run: |
-          # For tag pushes, never skip CI
+          # CRITICAL: NEVER skip CI for tag pushes
           if [[ "$REF_TYPE" == "tag" ]]; then
-            echo "This is a tag push - never skipping CI for releases"
+            echo "🏷️  TAG DETECTED: $REF"
+            echo "✅ Tags always trigger CI for releases - NEVER skipping"
             echo "should_skip=false" >> $GITHUB_OUTPUT
-            echo "✅ Proceeding with CI for tag: ${{ github.ref }}"
             exit 0
           fi
           
-          echo "Event: $EVENT_NAME"
-          echo "Commit message: '$COMMIT_MESSAGE'"
+          echo "Checking skip patterns for non-tag event..."
+          echo "Commit message: '$COMMIT_MSG'"
           echo "PR title: '$PR_TITLE'"
           
-          # Check for skip patterns
+          # Only check skip patterns for non-tag pushes and PRs
           should_skip=false
           
-          # Define patterns as a simple string for easier checking
-          if [[ "$COMMIT_MESSAGE" == *"[skip ci]"* ]] || 
-             [[ "$COMMIT_MESSAGE" == *"[ci skip]"* ]] || 
-             [[ "$COMMIT_MESSAGE" == *"[skip actions]"* ]] || 
-             [[ "$COMMIT_MESSAGE" == *"[actions skip]"* ]] ||
+          if [[ "$COMMIT_MSG" == *"[skip ci]"* ]] || 
+             [[ "$COMMIT_MSG" == *"[ci skip]"* ]] || 
+             [[ "$COMMIT_MSG" == *"[skip actions]"* ]] || 
+             [[ "$COMMIT_MSG" == *"[actions skip]"* ]] ||
              [[ "$PR_TITLE" == *"[skip ci]"* ]] || 
              [[ "$PR_TITLE" == *"[ci skip]"* ]] || 
              [[ "$PR_TITLE" == *"[skip actions]"* ]] || 
              [[ "$PR_TITLE" == *"[actions skip]"* ]]; then
             should_skip=true
-            echo "Skip pattern detected"
+            echo "⏭️  Skip pattern detected in commit/PR"
           fi
           
+          echo "should_skip=$should_skip" >> $GITHUB_OUTPUT
+          
           if [ "$should_skip" = true ]; then
-            echo "should_skip=true" >> $GITHUB_OUTPUT
-            echo "⏭️  Skipping CI due to skip pattern detected"
+            echo "⏭️  Skipping CI due to skip pattern (non-tag event)"
           else
-            echo "should_skip=false" >> $GITHUB_OUTPUT
             echo "✅ Proceeding with CI"
           fi
-
-      - name: Never skip CI for tags
-        if: startsWith(github.ref, 'refs/tags/')
-        run: |
-          echo "should_skip=false" >> $GITHUB_OUTPUT
-          echo "✅ Tag detected - proceeding with CI"
 
   # Comprehensive testing across Node versions
   test:
