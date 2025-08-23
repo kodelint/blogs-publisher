@@ -1,57 +1,60 @@
 import axios, { AxiosInstance } from "axios";
-import { BlogPost, HashNodePost } from "../types";
+import { BlogPost, HashnodePost, HashnodePostResponse } from "../types";
 
 export class HashnodeClient {
-    private client: AxiosInstance;
+  private client: AxiosInstance;
 
-    constructor(private token: string) {
-        this.client = axios.create({
-            baseURL: "https://gql.hashnode.com",
-            headers: {
-                Authorization: this.token, // Fixed: use this.token
-                "Content-Type": "application/json",
-            },
-        });
-    }
+  constructor(private token: string) {
+    this.client = axios.create({
+      baseURL: "https://gql.hashnode.com",
+      headers: {
+        Authorization: this.token,
+        "Content-Type": "application/json",
+      },
+    });
+  }
 
-    private generateSlug(title: string): string {
-        return title
-            .toLowerCase()
-            .replace(/[^a-z0-9 -]/g, "")
-            .replace(/\s+/g, "-")
-            .replace(/-+/g, "-")
-            .trim();
-    }
+  private generateSlug(title: string): string {
+    return title
+      .toLowerCase()
+      .replace(/[^a-z0-9 -]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim();
+  }
 
-    // Convert BlogPost to HashnodePost format
-    private convertToHashnodePost(blogPost: BlogPost, publicationId?: string): HashNodePost {
-        const slug = blogPost.slug || this.generateSlug(blogPost.title);
+  // Convert BlogPost to HashnodePost format
+  private convertToHashnodePost(
+    blogPost: BlogPost,
+    publicationId?: string,
+  ): HashnodePost {
+    const slug = blogPost.slug || this.generateSlug(blogPost.title);
 
-        return {
-            title: blogPost.title,
-            contentMarkdown: blogPost.content,
-            tags: blogPost.tags.map(tag => ({ name: tag })),
-            coverImageURL: blogPost.cover_image,
-            slug,
-            subtitle: blogPost.description,
-            originalArticleURL: blogPost.canonical_url,
-            publicationId,
-            disableComments: false,
-        };
-    }
+    return {
+      title: blogPost.title,
+      contentMarkdown: blogPost.content,
+      tags: blogPost.tags.map((tag) => ({ name: tag })),
+      coverImageURL: blogPost.cover_image,
+      slug,
+      subtitle: blogPost.description,
+      originalArticleURL: blogPost.canonical_url,
+      publicationId,
+      disableComments: false,
+    };
+  }
 
-    async publishPost(
-        blogPost: BlogPost,
-        publicationId?: string,
-    ): Promise<{ id: string; url: string }> {
-        try {
-            if (!publicationId) {
-                throw new Error("Hashnode publication ID not provided");
-            }
+  async publishPost(
+    blogPost: BlogPost,
+    publicationId?: string,
+  ): Promise<{ id: string; url: string }> {
+    try {
+      if (!publicationId) {
+        throw new Error("Hashnode publication ID not provided");
+      }
 
-            const hashnodePost = this.convertToHashnodePost(blogPost, publicationId);
+      const hashnodePost = this.convertToHashnodePost(blogPost, publicationId);
 
-            const mutation = `
+      const mutation = `
         mutation PublishPost($input: PublishPostInput!) {
           publishPost(input: $input) {
             post {
@@ -64,136 +67,124 @@ export class HashnodeClient {
         }
       `;
 
-            const variables = {
-                input: {
-                    title: hashnodePost.title,
-                    contentMarkdown: hashnodePost.contentMarkdown,
-                    tags: hashnodePost.tags?.map((tag) => ({
-                        name: tag.name,
-                        slug: tag.name.toLowerCase().replace(/\s+/g, "-"),
-                    })),
-                    slug: hashnodePost.slug,
-                    coverImageOptions: hashnodePost.coverImageURL
-                        ? {
-                            coverImageURL: hashnodePost.coverImageURL,
-                        }
-                        : undefined,
-                    subtitle: hashnodePost.subtitle,
-                    publicationId: hashnodePost.publicationId,
-                    originalArticleURL: hashnodePost.originalArticleURL,
-                    disableComments: hashnodePost.disableComments,
-                    metaTags: {
-                        title: hashnodePost.title,
-                        description: hashnodePost.subtitle,
-                        image: hashnodePost.coverImageURL,
-                    },
-                },
-            };
+      const variables = {
+        input: {
+          title: hashnodePost.title,
+          contentMarkdown: hashnodePost.contentMarkdown,
+          tags: hashnodePost.tags?.map((tag) => ({
+            name: tag.name,
+            slug: tag.name.toLowerCase().replace(/\s+/g, "-"),
+          })),
+          slug: hashnodePost.slug,
+          coverImageOptions: hashnodePost.coverImageURL
+            ? {
+                coverImageURL: hashnodePost.coverImageURL,
+              }
+            : undefined,
+          subtitle: hashnodePost.subtitle,
+          publicationId: hashnodePost.publicationId,
+          originalArticleURL: hashnodePost.originalArticleURL,
+          disableComments: hashnodePost.disableComments,
+          metaTags: {
+            title: hashnodePost.title,
+            description: hashnodePost.subtitle,
+            image: hashnodePost.coverImageURL,
+          },
+        },
+      };
 
-            const response = await this.client.post("", {
-                query: mutation,
-                variables,
-            });
+      const response = await this.client.post("", {
+        query: mutation,
+        variables,
+      });
 
-            if (response.data.errors) {
-                throw new Error(
-                    `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
-                );
-            }
+      if (response.data.errors) {
+        throw new Error(
+          `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
+        );
+      }
 
-            const post = response.data.data.publishPost.post;
-            return {
-                id: post.id,
-                url: post.url,
-            };
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                const errorMessage =
-                    error.response?.data?.errors?.[0]?.message ||
-                    error.response?.data?.message ||
-                    error.message;
-                throw new Error(`Hashnode API error: ${errorMessage}`);
-            }
-            throw error;
-        }
+      const post = response.data.data.publishPost.post;
+      return {
+        id: post.id,
+        url: post.url,
+      };
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        const errorMessage =
+          error.response?.data?.errors?.[0]?.message ||
+          error.response?.data?.message ||
+          error.message;
+        throw new Error(`Hashnode API error: ${errorMessage}`);
+      }
+      throw error;
     }
+  }
 
-    // Update return type to use HashnodePost interface
-    async getPost(slug: string): Promise<HashNodePost | null> {
-        try {
-            const query = `
-        query GetPost($slug: String!) {
-          post(slug: $slug) {
-            id
-            title
-            slug
-            url
-            contentMarkdown
-            tags {
-              name
-              slug
-            }
-            coverImage {
-              url
-            }
-            subtitle
-            dateAdded
-            author {
-              username
-              name
-            }
-          }
-        }
-      `;
+  async getPost(slug: string): Promise<HashnodePostResponse | null> {
+    try {
+      const query = `
+              query GetPost($slug: String!) {
+                post(slug: $slug) {
+                  id
+                  title
+                  slug
+                  url
+                  contentMarkdown
+                  tags {
+                    name
+                    slug
+                  }
+                  coverImage {
+                    url
+                  }
+                  subtitle
+                  dateAdded
+                  author {
+                    username
+                    name
+                  }
+                }
+              }
+            `;
 
-            const response = await this.client.post("", {
-                query,
-                variables: { slug },
-            });
+      const response = await this.client.post("", {
+        query,
+        variables: { slug },
+      });
 
-            if (response.data.errors) {
-                throw new Error(
-                    `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
-                );
-            }
+      if (response.data.errors) {
+        throw new Error(
+          `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
+        );
+      }
 
-            const postData = response.data.data.post;
-            if (!postData) return null;
-
-            return {
-                title: postData.title,
-                contentMarkdown: postData.contentMarkdown,
-                tags: postData.tags.map((tag: any) => ({ name: tag.name })),
-                coverImageURL: postData.coverImage?.url,
-                slug: postData.slug,
-                subtitle: postData.subtitle,
-            };
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                throw new Error(
-                    `Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`,
-                );
-            }
-            throw error;
-        }
+      return response.data.data.post;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(
+          `Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`,
+        );
+      }
+      throw error;
     }
+  }
 
-    // Add proper typing for getMe response
-    async getMe(): Promise<{
-        id: string;
-        username: string;
-        name: string;
-        tagline?: string;
-        photo?: string;
-        publicationDomain?: string;
-        publications?: Array<{
-            id: string;
-            title: string;
-            domain: string;
-        }>;
-    }> {
-        try {
-            const query = `
+  async getMe(): Promise<{
+    id: string;
+    username: string;
+    name: string;
+    tagline?: string;
+    photo?: string;
+    publicationDomain?: string;
+    publications?: Array<{
+      id: string;
+      title: string;
+      domain: string;
+    }>;
+  }> {
+    try {
+      const query = `
         query Me {
           me {
             id
@@ -211,24 +202,65 @@ export class HashnodeClient {
         }
       `;
 
-            const response = await this.client.post("", {
-                query,
-            });
+      const response = await this.client.post("", {
+        query,
+      });
 
-            if (response.data.errors) {
-                throw new Error(
-                    `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
-                );
-            }
+      if (response.data.errors) {
+        throw new Error(
+          `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
+        );
+      }
 
-            return response.data.data.me;
-        } catch (error) {
-            if (axios.isAxiosError(error)) {
-                throw new Error(
-                    `Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`,
-                );
-            }
-            throw error;
-        }
+      return response.data.data.me;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(
+          `Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`,
+        );
+      }
+      throw error;
     }
+  }
+
+  async getUserPosts(username: string): Promise<any[]> {
+    try {
+      const query = `
+        query GetUserPosts($username: String!) {
+          user(username: $username) {
+            posts(page: 0) {
+              id
+              title
+              slug
+              url
+              dateAdded
+              tags {
+                name
+              }
+            }
+          }
+        }
+      `;
+
+      const response = await this.client.post("", {
+        query,
+        variables: { username },
+      });
+
+      if (response.data.errors) {
+        throw new Error(
+          `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
+        );
+      }
+
+      return response.data.data.user.posts;
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        throw new Error(
+          `Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`,
+        );
+      }
+      throw error;
+    }
+  }
 }
