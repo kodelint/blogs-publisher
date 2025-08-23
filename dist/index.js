@@ -157,16 +157,23 @@ class HashnodeClient {
     // Convert BlogPost to HashnodePost format
     convertToHashnodePost(blogPost, publicationId) {
         const slug = blogPost.slug || this.generateSlug(blogPost.title);
+        // Handle publishedAt date conversion
+        let publishedAt;
+        if (blogPost.publishedAt) {
+            // Convert to ISO string format that Hashnode expects
+            publishedAt = new Date(blogPost.publishedAt).toISOString();
+        }
         return {
             title: blogPost.title,
             contentMarkdown: blogPost.content,
-            tags: blogPost.tags.map((tag) => ({ name: tag })),
-            coverImageURL: blogPost.cover_image,
+            tags: blogPost.tags.map(tag => ({ name: tag })),
+            coverImageURL: blogPost.cover_image, // Map cover_image to coverImageURL
             slug,
-            subtitle: blogPost.description,
+            subtitle: blogPost.subtitle || blogPost.description, // Use subtitle if available, fallback to description
             originalArticleURL: blogPost.canonical_url,
             publicationId,
             disableComments: false,
+            publishedAt, // Add publishedAt field
         };
     }
     async publishPost(blogPost, publicationId) {
@@ -205,6 +212,7 @@ class HashnodeClient {
                     publicationId: hashnodePost.publicationId,
                     originalArticleURL: hashnodePost.originalArticleURL,
                     disableComments: hashnodePost.disableComments,
+                    publishedAt: hashnodePost.publishedAt, // Add this line
                     metaTags: {
                         title: hashnodePost.title,
                         description: hashnodePost.subtitle,
