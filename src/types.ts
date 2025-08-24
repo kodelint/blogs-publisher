@@ -10,6 +10,8 @@ export interface Config {
   dryRun: boolean;
   postsDirectory: string;
   githubToken: string;
+  updateAlreadyPublished: boolean;
+  debuggingEnabled: boolean;
 }
 
 export interface BlogPost {
