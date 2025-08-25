@@ -612,7 +612,8 @@ async function run() {
     try {
         logger_1.logger.info("Starting blog publisher action");
         const debuggingEnabled = process.env.DEBUGGING_ENABLED === "true" ||
-            core.getBooleanInput("debugging_enabled");
+            core.getBooleanInput("debugging_enabled") ||
+            process.env.ACTIONS_RUNNER_DEBUG === "true";
         if (debuggingEnabled) {
             logger_1.logger.setLevel(logger_1.LogLevel.DEBUG);
             logger_1.logger.debug("Debug logging enabled");

@@ -17,7 +17,7 @@ A powerful GitHub Action that automatically publishes your Markdown blog posts t
 - 🎯 **Smart Platform Detection**: Automatically determines target platform based on file path or commit message
 - 📁 **Flexible File Organization**: Supports customizable directory structures for different platforms
 - 🔄 **Multiple Publishing Options**: Publish based on file paths or commit messages
-- 📋 **Rich Metadata Support**: Full support for frontmatter, tags, canonical URLs, cover images, and more
+- 📋 **Rich Metadata Support**: Full support for front-matter, tags, canonical URLs, cover images, and more
 - 🧪 **Dry Run Mode**: Test your setup without actually publishing
 - 📊 **Comprehensive Testing**: 80%+ test coverage with local and CI testing
 - 🔒 **Secure**: No sensitive data stored, uses GitHub secrets for API tokens
@@ -65,6 +65,7 @@ jobs:
     use_commit_message: true
     dry_run: false
     posts_directory: "./blog"
+    update_already_published: false # Default is `true`
 ```
 
 ## 📂 Directory Structure
@@ -95,9 +96,9 @@ with:
   hashnode_path: "content/hashnode"
 ```
 
-## 📝 Frontmatter Support
+## 📝 Front-matter Support
 
-The action supports rich frontmatter for all platforms:
+The action supports rich front-matter for all platforms:
 
 ```markdown
 ---
@@ -191,7 +192,7 @@ Then use commit messages like:
 ### Outputs
 
 | Output            | Description                                |
-| ----------------- | ------------------------------------------ |
+|-------------------|--------------------------------------------|
 | `published-posts` | JSON array of successfully published posts |
 | `failed-posts`    | JSON array of posts that failed to publish |
 
@@ -213,7 +214,7 @@ Then use commit messages like:
 ### Hashnode Token
 
 1. Go to [Hashnode Settings](https://hashnode.com/settings/developer)
-2. Generate a new Personal Access Token
+2. Generate new Personal Access Token (PAT)
 3. Add it to your repository secrets as `HASHNODE_TOKEN`
 4. (Optional) Get your Publication ID and add as `HASHNODE_PUBLICATION_ID`
 
@@ -348,8 +349,9 @@ Enable debug logging in your workflow:
   with:
     # ... your config
   env:
-    ACTIONS_STEP_DEBUG: true
+    ACTIONS_STEP_DEBUG: true # Native to GitHub Action
 ```
+Add `DEBUGGING_ENABLED` to your repository environment variables or enable `ACTIONS_STEP_DEBUG`
 
 ## 🤝 Contributing
 
