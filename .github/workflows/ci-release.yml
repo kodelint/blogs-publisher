@@ -185,6 +185,7 @@ jobs:
           devto_token: "test-token"
           hashnode_token: "test-token"
           dry_run: "true"
+          github_token: 'test_token'
 
   # Security checks
   security-check:
@@ -308,7 +309,7 @@ jobs:
     if: |
       needs.skip-ci-check.outputs.should_skip == 'false' &&
       github.event_name == 'push' &&
-      github.ref == 'refs/heads/main'
+      (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
     permissions:
       contents: write
       issues: write
