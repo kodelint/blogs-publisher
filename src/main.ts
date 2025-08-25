@@ -11,7 +11,7 @@ export async function run(): Promise<void> {
 
     const debuggingEnabled =
       process.env.DEBUGGING_ENABLED === "true" ||
-      core.getBooleanInput("debugging-enabled");
+      core.getBooleanInput("debugging_enabled");
 
     if (debuggingEnabled) {
       logger.setLevel(LogLevel.DEBUG);

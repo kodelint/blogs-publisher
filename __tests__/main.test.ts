@@ -211,7 +211,7 @@ describe("Main Action", () => {
     process.env.DEBUGGING_ENABLED = "true";
 
     mockedCore.getBooleanInput.mockImplementation((key: string) => {
-      return key === "debugging-enabled";
+      return key === "debugging_enabled";
     });
 
     const mockInstance = {
