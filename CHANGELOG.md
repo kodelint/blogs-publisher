@@ -1,3 +1,11 @@
+# [1.1.0-develop.2](https://github.com/kodelint/blogs-publisher/compare/v1.1.0-develop.1...v1.1.0-develop.2) (2025-08-25)
+
+
+### Bug Fixes
+
+* Now support `ACTIONS_STEP_DEBUG` or `DEBUGGING_ENABLED` to enable debug mode ([784449d](https://github.com/kodelint/blogs-publisher/commit/784449d2b66d44fee552c15e6e730297fd8d84e8))
+* Version bump ([7ac4191](https://github.com/kodelint/blogs-publisher/commit/7ac41910dea2f3b2065bd946a50a583c3559fb58))
+
 # [1.1.0-develop.1](https://github.com/kodelint/blogs-publisher/compare/v1.0.3...v1.1.0-develop.1) (2025-08-25)
 
 
