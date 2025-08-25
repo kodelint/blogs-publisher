@@ -21,7 +21,7 @@ inputs:
     description: "Path pattern for Medium posts"
     required: false
     default: "posts/medium"
-  devto-path:
+  devto_path:
     description: "Path pattern for Dev.to posts"
     required: false
     default: "posts/devto"

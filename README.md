@@ -60,7 +60,7 @@ jobs:
     hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
     hashnode-publication-id: ${{ secrets.HASHNODE_PUBLICATION_ID }}
     medium-path: "content/medium"
-    devto-path: "content/devto"
+    devto_path: "content/devto"
     hashnode_path: "content/hashnode"
     use_commit_message: true
     dry_run: false
@@ -91,7 +91,7 @@ You can customize the directory structure using the path inputs:
 ```yaml
 with:
   medium-path: "blog/medium-posts"
-  devto-path: "articles/dev"
+  devto_path: "articles/dev"
   hashnode_path: "content/hashnode"
 ```
 
@@ -180,7 +180,7 @@ Then use commit messages like:
 | `hashnode-token`          | Hashnode Personal Access Token            | No\*     | -                |
 | `hashnode-publication-id` | Hashnode Publication ID                   | No       | -                |
 | `medium-path`             | Medium posts directory pattern            | No       | `posts/medium`   |
-| `devto-path`              | Dev.to posts directory pattern            | No       | `posts/devto`    |
+| `devto_path`              | Dev.to posts directory pattern            | No       | `posts/devto`    |
 | `hashnode_path`           | Hashnode posts directory pattern          | No       | `posts/hashnode` |
 | `use_commit_message`      | Use commit message for platform detection | No       | `false`          |
 | `dry_run`                 | Run without publishing                    | No       | `false`          |
