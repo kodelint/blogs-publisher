@@ -47,7 +47,7 @@ describe("BlogsPublisher - Comprehensive Test Coverage", () => {
     config = {
       mediumToken: "medium_token",
       devtoToken: "devto_token",
-      hashnodeToken: "hashnode-token",
+      hashnodeToken: "hashnode_token",
       hashnodePublicationId: "pub-id",
       mediumPath: "posts/medium",
       devtoPath: "posts/devto",
@@ -55,7 +55,7 @@ describe("BlogsPublisher - Comprehensive Test Coverage", () => {
       useCommitMessage: false,
       dryRun: false,
       postsDirectory: ".",
-      githubToken: "github-token",
+      githubToken: "github_token",
       updateAlreadyPublished: true,
       debuggingEnabled: false,
     };
