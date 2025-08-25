@@ -11,7 +11,7 @@ inputs:
   hashnode-token:
     description: "Hashnode Personal Access Token"
     required: false
-  github-token:
+  github_token:
     description: 'GitHub token for accessing repository contents'
     required: true
   hashnode_publication_id:

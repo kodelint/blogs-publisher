@@ -143,7 +143,7 @@ describe("BlogsPublisher - Comprehensive Test Coverage", () => {
       expect(mockedDevtoClient).toHaveBeenCalledWith("devto-token");
       expect(mockedHashnodeClient).toHaveBeenCalledWith("hashnode-token");
       expect(mockedMarkdownProcessor).toHaveBeenCalled();
-      expect(process.env.GITHUB_TOKEN).toBe("github-token");
+      expect(process.env.GITHUB_TOKEN).toBe("github_token");
     });
 
     test("should initialize without GitHub token", () => {

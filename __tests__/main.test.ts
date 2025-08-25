@@ -25,7 +25,7 @@ describe("Main Action", () => {
         "devto-token": "devto-token",
         "hashnode-token": "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
-        "github-token": "github-token",
+        github_token: "github-token",
         medium_path: "posts/medium",
         devto_path: "posts/devto",
         hashnode_path: "posts/hashnode",
@@ -238,7 +238,7 @@ describe("Main Action - Branch Coverage", () => {
         "devto-token": "devto-token",
         "hashnode-token": "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
-        "github-token": "github-token",
+        github_token: "github-token",
         medium_path: "posts/medium",
         devto_path: "posts/devto",
         hashnode_path: "posts/hashnode",
@@ -279,7 +279,7 @@ describe("Main Action - Additional Coverage", () => {
         "devto-token": "devto-token",
         "hashnode-token": "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
-        "github-token": "github-token",
+        github_token: "github-token",
         medium_path: "posts/medium",
         devto_path: "posts/devto",
         hashnode_path: "posts/hashnode",
@@ -307,7 +307,7 @@ describe("Main Action - Additional Coverage", () => {
         "devto-token": "devto-token",
         "hashnode-token": "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
-        "github-token": "github-token",
+        github_token: "github-token",
         medium_path: "", // Empty - should use default
         devto_path: "", // Empty - should use default
         hashnode_path: "", // Empty - should use default

@@ -29,7 +29,7 @@ export async function run(): Promise<void> {
       useCommitMessage: core.getBooleanInput("use_commit_message"),
       dryRun: core.getBooleanInput("dry_run"),
       postsDirectory: core.getInput("posts_directory") || ".",
-      githubToken: core.getInput("github-token"),
+      githubToken: core.getInput("github_token"),
       updateAlreadyPublished:
         core.getBooleanInput("update_already_published") || true,
       debuggingEnabled,
