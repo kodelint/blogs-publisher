@@ -26,7 +26,7 @@ export async function run(): Promise<void> {
       mediumPath: core.getInput("medium-path") || "posts/medium",
       devtoPath: core.getInput("devto-path") || "posts/devto",
       hashnodePath: core.getInput("hashnode-path") || "posts/hashnode",
-      useCommitMessage: core.getBooleanInput("use-commit-message"),
+      useCommitMessage: core.getBooleanInput("use_commit_message"),
       dryRun: core.getBooleanInput("dry_run"),
       postsDirectory: core.getInput("posts_directory") || ".",
       githubToken: core.getInput("github-token"),

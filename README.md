@@ -62,7 +62,7 @@ jobs:
     medium-path: "content/medium"
     devto-path: "content/devto"
     hashnode-path: "content/hashnode"
-    use-commit-message: true
+    use_commit_message: true
     dry_run: false
     posts_directory: "./blog"
 ```
@@ -160,7 +160,7 @@ Enable commit message detection:
 
 ```yaml
 with:
-  use-commit-message: true
+  use_commit_message: true
 ```
 
 Then use commit messages like:
@@ -182,7 +182,7 @@ Then use commit messages like:
 | `medium-path`             | Medium posts directory pattern            | No       | `posts/medium`   |
 | `devto-path`              | Dev.to posts directory pattern            | No       | `posts/devto`    |
 | `hashnode-path`           | Hashnode posts directory pattern          | No       | `posts/hashnode` |
-| `use-commit-message`      | Use commit message for platform detection | No       | `false`          |
+| `use_commit_message`      | Use commit message for platform detection | No       | `false`          |
 | `dry_run`                 | Run without publishing                    | No       | `false`          |
 | `posts_directory`         | Base directory for posts                  | No       | `.`              |
 
@@ -285,7 +285,7 @@ jobs:
       - uses: kodelint/blogs-publisher@v1
         with:
           medium-token: ${{ secrets.MEDIUM_TOKEN }}
-          use-commit-message: true
+          use_commit_message: true
 ```
 
 ## 🧪 Testing
@@ -322,7 +322,7 @@ The project maintains 80%+ test coverage across:
 #### "No platform determined"
 
 - **Cause**: File path doesn't match any configured patterns and commit message detection is disabled
-- **Solution**: Check your file paths or enable `use-commit-message: true`
+- **Solution**: Check your file paths or enable `use_commit_message: true`
 
 #### "Token not provided"
 

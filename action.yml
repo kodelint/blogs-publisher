@@ -29,7 +29,7 @@ inputs:
     description: "Path pattern for Hashnode posts"
     required: false
     default: "posts/hashnode"
-  use-commit-message:
+  use_commit_message:
     description: "Use commit message to determine platform (true/false)"
     required: false
     default: "false"

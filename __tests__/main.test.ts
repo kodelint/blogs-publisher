@@ -36,7 +36,7 @@ describe("Main Action", () => {
 
     mockedCore.getBooleanInput.mockImplementation((key: string) => {
       const booleans: { [key: string]: boolean } = {
-        "use-commit-message": false,
+        use_commit_message: false,
         dry_run: false,
         update_already_published: true,
         debugging_enabled: false, // Make sure this returns false
