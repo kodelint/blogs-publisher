@@ -17,7 +17,7 @@ inputs:
   hashnode-publication-id:
     description: "Hashnode Publication ID (optional)"
     required: false
-  medium-path:
+  medium_path:
     description: "Path pattern for Medium posts"
     required: false
     default: "posts/medium"

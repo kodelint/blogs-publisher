@@ -23,7 +23,7 @@ export async function run(): Promise<void> {
       devtoToken: core.getInput("devto-token"),
       hashnodeToken: core.getInput("hashnode-token"),
       hashnodePublicationId: core.getInput("hashnode-publication-id"),
-      mediumPath: core.getInput("medium-path") || "posts/medium",
+      mediumPath: core.getInput("medium_path") || "posts/medium",
       devtoPath: core.getInput("devto_path") || "posts/devto",
       hashnodePath: core.getInput("hashnode_path") || "posts/hashnode",
       useCommitMessage: core.getBooleanInput("use_commit_message"),
