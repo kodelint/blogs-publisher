@@ -153,15 +153,6 @@ jobs:
       - name: Build and package
         run: npm run package
 
-#      - name: Verify Dist is up-to-date
-#        run: |
-#          npm run package
-#          if ! git diff --quiet -- dist/; then
-#            echo "Error: dist/ folder is not up-to-date with source changes"
-#            echo "Run 'npm run package' and commit the changes"
-#            exit 1
-#          fi
-
       - name: Upload dist artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -345,21 +336,10 @@ jobs:
       - name: Build package
         run: npm run package
 
-#      - name: Verify dist is up-to-date
-#        run: |
-#          if ! git diff --quiet -- dist/; then
-#            echo "Adding updated dist files to git"
-#            git config user.name "github-actions[bot]"
-#            git config user.email "github-actions[bot]@users.noreply.github.com"
-#            git add dist/
-#            git commit -m "chore: update dist files [skip ci]"
-#          fi
-
       - name: Run Semantic Release (GitHub only)
         id: semantic
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN }}
-          # Explicitly disable npm publishing
           NPM_CONFIG_FUND: false
           NPM_CONFIG_AUDIT: false
         run: |
