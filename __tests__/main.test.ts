@@ -22,7 +22,7 @@ describe("Main Action", () => {
     mockedCore.getInput.mockImplementation((key: string) => {
       const inputs: { [key: string]: string } = {
         "medium-token": "medium-token",
-        "devto-token": "devto-token",
+        devto_token: "devto-token",
         hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
         github_token: "github-token",
@@ -235,7 +235,7 @@ describe("Main Action - Branch Coverage", () => {
     mockedCore.getInput.mockImplementation((key: string) => {
       const inputs: { [key: string]: string } = {
         "medium-token": "",
-        "devto-token": "devto-token",
+        devto_token: "devto-token",
         hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
         github_token: "github-token",
@@ -276,7 +276,7 @@ describe("Main Action - Additional Coverage", () => {
     mockedCore.getInput.mockImplementation((key: string) => {
       const inputs: { [key: string]: string } = {
         "medium-token": "medium-token",
-        "devto-token": "devto-token",
+        devto_token: "devto-token",
         hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
         github_token: "github-token",
@@ -304,7 +304,7 @@ describe("Main Action - Additional Coverage", () => {
     mockedCore.getInput.mockImplementation((key: string) => {
       const inputs: { [key: string]: string } = {
         "medium-token": "medium-token",
-        "devto-token": "devto-token",
+        devto_token: "devto-token",
         hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
         github_token: "github-token",

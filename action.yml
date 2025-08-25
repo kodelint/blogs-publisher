@@ -5,7 +5,7 @@ inputs:
   medium-token:
     description: "Medium Integration Token"
     required: false
-  devto-token:
+  devto_token:
     description: "Dev.to API Key"
     required: false
   hashnode_token:

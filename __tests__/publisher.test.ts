@@ -46,7 +46,7 @@ describe("BlogsPublisher - Comprehensive Test Coverage", () => {
   beforeEach(() => {
     config = {
       mediumToken: "medium-token",
-      devtoToken: "devto-token",
+      devtoToken: "devto_token",
       hashnodeToken: "hashnode-token",
       hashnodePublicationId: "pub-id",
       mediumPath: "posts/medium",
@@ -140,7 +140,7 @@ describe("BlogsPublisher - Comprehensive Test Coverage", () => {
     test("should initialize with all clients and set GITHUB_TOKEN environment variable", () => {
       new BlogsPublisher(config);
       expect(mockedMediumClient).toHaveBeenCalledWith("medium-token");
-      expect(mockedDevtoClient).toHaveBeenCalledWith("devto-token");
+      expect(mockedDevtoClient).toHaveBeenCalledWith("devto_token");
       expect(mockedHashnodeClient).toHaveBeenCalledWith("hashnode_token");
       expect(mockedMarkdownProcessor).toHaveBeenCalled();
       expect(process.env.GITHUB_TOKEN).toBe("github_token");
@@ -1549,7 +1549,7 @@ describe("BlogsPublisher - Comprehensive Test Coverage", () => {
     test("should initialize with clients", () => {
       new BlogsPublisher(config);
       expect(mockedMediumClient).toHaveBeenCalledWith("medium-token");
-      expect(mockedDevtoClient).toHaveBeenCalledWith("devto-token");
+      expect(mockedDevtoClient).toHaveBeenCalledWith("devto_token");
       expect(mockedHashnodeClient).toHaveBeenCalledWith("hashnode_token");
     });
 

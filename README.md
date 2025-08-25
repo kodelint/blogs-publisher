@@ -45,7 +45,7 @@ jobs:
         uses: kodelint/blogs-publisher@v1
         with:
           medium-token: ${{ secrets.MEDIUM_TOKEN }}
-          devto-token: ${{ secrets.DEVTO_TOKEN }}
+          devto_token: ${{ secrets.DEVTO_TOKEN }}
           hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
 ```
 
@@ -56,7 +56,7 @@ jobs:
   uses: kodelint/blogs-publisher@v1
   with:
     medium-token: ${{ secrets.MEDIUM_TOKEN }}
-    devto-token: ${{ secrets.DEVTO_TOKEN }}
+    devto_token: ${{ secrets.DEVTO_TOKEN }}
     hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
     hashnode_publication_id: ${{ secrets.HASHNODE_PUBLICATION_ID }}
     medium_path: "content/medium"
@@ -176,7 +176,7 @@ Then use commit messages like:
 | Input                     | Description                               | Required | Default          |
 |---------------------------| ----------------------------------------- | -------- | ---------------- |
 | `medium-token`            | Medium Integration Token                  | No\*     | -                |
-| `devto-token`             | Dev.to API Key                            | No\*     | -                |
+| `devto_token`             | Dev.to API Key                            | No\*     | -                |
 | `hashnode_token`          | Hashnode Personal Access Token            | No\*     | -                |
 | `hashnode_publication_id` | Hashnode Publication ID                   | No       | -                |
 | `medium_path`             | Medium posts directory pattern            | No       | `posts/medium`   |
@@ -237,7 +237,7 @@ jobs:
       - uses: kodelint/blogs-publisher@v1
         with:
           medium-token: ${{ secrets.MEDIUM_TOKEN }}
-          devto-token: ${{ secrets.DEVTO_TOKEN }}
+          devto_token: ${{ secrets.DEVTO_TOKEN }}
           hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
 ```
 
@@ -262,7 +262,7 @@ jobs:
       - uses: kodelint/blogs-publisher@v1
         with:
           medium-token: ${{ secrets.MEDIUM_TOKEN }}
-          devto-token: ${{ secrets.DEVTO_TOKEN }}
+          devto_token: ${{ secrets.DEVTO_TOKEN }}
           hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
           dry_run: ${{ github.event.inputs.dry_run }}
 ```
