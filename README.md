@@ -58,7 +58,7 @@ jobs:
     medium-token: ${{ secrets.MEDIUM_TOKEN }}
     devto-token: ${{ secrets.DEVTO_TOKEN }}
     hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
-    hashnode-publication-id: ${{ secrets.HASHNODE_PUBLICATION_ID }}
+    hashnode_publication_id: ${{ secrets.HASHNODE_PUBLICATION_ID }}
     medium_path: "content/medium"
     devto_path: "content/devto"
     hashnode_path: "content/hashnode"
@@ -178,7 +178,7 @@ Then use commit messages like:
 | `medium-token`            | Medium Integration Token                  | No\*     | -                |
 | `devto-token`             | Dev.to API Key                            | No\*     | -                |
 | `hashnode-token`          | Hashnode Personal Access Token            | No\*     | -                |
-| `hashnode-publication-id` | Hashnode Publication ID                   | No       | -                |
+| `hashnode_publication_id` | Hashnode Publication ID                   | No       | -                |
 | `medium_path`             | Medium posts directory pattern            | No       | `posts/medium`   |
 | `devto_path`              | Dev.to posts directory pattern            | No       | `posts/devto`    |
 | `hashnode_path`           | Hashnode posts directory pattern          | No       | `posts/hashnode` |

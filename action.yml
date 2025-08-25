@@ -14,7 +14,7 @@ inputs:
   github-token:
     description: 'GitHub token for accessing repository contents'
     required: true
-  hashnode-publication-id:
+  hashnode_publication_id:
     description: "Hashnode Publication ID (optional)"
     required: false
   medium_path:
