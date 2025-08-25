@@ -38,8 +38,8 @@ describe("Main Action", () => {
       const booleans: { [key: string]: boolean } = {
         "use-commit-message": false,
         "dry-run": false,
-        "update-already-published": true,
-        "debugging-enabled": false, // Make sure this returns false
+        update_already_published: true,
+        debugging_enabled: false, // Make sure this returns false
       };
       return booleans[key] || false;
     });
@@ -330,7 +330,7 @@ describe("Main Action - Additional Coverage", () => {
 
   test("should handle updateAlreadyPublished set to false", async () => {
     mockedCore.getBooleanInput.mockImplementation((key: string) => {
-      if (key === "update-already-published") return false;
+      if (key === "update_already_published") return false;
       return false;
     });
 
