@@ -1,26 +1,33 @@
+// hashnode.ts
 import axios, { AxiosInstance } from "axios";
 import { BlogPost, HashnodePost, HashnodePostResponse } from "../types";
+import { logger } from "../utils/logger";
 
 export class HashnodeClient {
   private client: AxiosInstance;
 
-  constructor(private token: string) {
+  constructor(token: string) {
+    logger.debug("Initializing Hashnode client");
     this.client = axios.create({
       baseURL: "https://gql.hashnode.com",
       headers: {
-        Authorization: this.token,
+        Authorization: token,
         "Content-Type": "application/json",
       },
     });
+    logger.debug("Hashnode client initialized");
   }
 
   private generateSlug(title: string): string {
-    return title
+    logger.debug(`Generating slug from title: ${title}`);
+    const slug = title
       .toLowerCase()
       .replace(/[^a-z0-9 -]/g, "")
       .replace(/\s+/g, "-")
       .replace(/-+/g, "-")
       .trim();
+    logger.debug(`Generated slug: ${slug}`);
+    return slug;
   }
 
   // Convert BlogPost to HashnodePost format
@@ -28,18 +35,21 @@ export class HashnodeClient {
     blogPost: BlogPost,
     publicationId?: string,
   ): HashnodePost {
+    logger.debug("Converting blog post to Hashnode format");
     const slug = blogPost.slug || this.generateSlug(blogPost.title);
 
     // Handle publishedAt date conversion
     let publishedAt: string | undefined;
     if (blogPost.publishedAt) {
       publishedAt = new Date(blogPost.publishedAt).toISOString();
+      logger.debug(`Using publishedAt: ${publishedAt}`);
     } else if (blogPost.date) {
       // Some Markdown processors might use 'date' instead of 'publishedAt'
       publishedAt = new Date(blogPost.date).toISOString();
+      logger.debug(`Using date as publishedAt: ${publishedAt}`);
     }
 
-    return {
+    const hashnodePost = {
       title: blogPost.title,
       contentMarkdown: blogPost.content,
       tags: blogPost.tags.map((tag) => ({ name: tag })),
@@ -51,6 +61,11 @@ export class HashnodeClient {
       disableComments: false,
       publishedAt,
     };
+
+    logger.debug(
+      `Converted to Hashnode post format with ${blogPost.tags.length} tags`,
+    );
+    return hashnodePost;
   }
 
   async publishPost(
@@ -58,10 +73,14 @@ export class HashnodeClient {
     publicationId?: string,
   ): Promise<{ id: string; url: string }> {
     try {
+      logger.info(`Publishing to Hashnode: ${blogPost.title}`);
+
       if (!publicationId) {
+        logger.error("Hashnode publication ID not provided");
         throw new Error("Hashnode publication ID not provided");
       }
 
+      logger.debug(`Using publication ID: ${publicationId}`);
       const hashnodePost = this.convertToHashnodePost(blogPost, publicationId);
 
       const mutation = `
@@ -95,7 +114,7 @@ export class HashnodeClient {
           publicationId: hashnodePost.publicationId,
           originalArticleURL: hashnodePost.originalArticleURL,
           disableComments: hashnodePost.disableComments,
-          publishedAt: hashnodePost.publishedAt, // Add this line
+          publishedAt: hashnodePost.publishedAt,
           metaTags: {
             title: hashnodePost.title,
             description: hashnodePost.subtitle,
@@ -104,18 +123,22 @@ export class HashnodeClient {
         },
       };
 
+      logger.debug("Sending GraphQL mutation to Hashnode");
       const response = await this.client.post("", {
         query: mutation,
         variables,
       });
 
       if (response.data.errors) {
-        throw new Error(
-          `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
-        );
+        const errorMessage = `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`;
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
       const post = response.data.data.publishPost.post;
+      logger.info(`Successfully published to Hashnode: ${post.url}`);
+      logger.debug(`Post ID: ${post.id}, Slug: ${post.slug}`);
+
       return {
         id: post.id,
         url: post.url,
@@ -126,38 +149,46 @@ export class HashnodeClient {
           error.response?.data?.errors?.[0]?.message ||
           error.response?.data?.message ||
           error.message;
+        logger.error(`Hashnode API error: ${errorMessage}`);
+        if (error.response?.data?.errors) {
+          logger.debug(
+            `Hashnode GraphQL errors: ${JSON.stringify(error.response.data.errors)}`,
+          );
+        }
         throw new Error(`Hashnode API error: ${errorMessage}`);
       }
+      logger.error(`Unexpected error publishing to Hashnode: ${error}`);
       throw error;
     }
   }
 
   async getPost(slug: string): Promise<HashnodePostResponse | null> {
     try {
+      logger.debug(`Fetching Hashnode post: ${slug}`);
       const query = `
-              query GetPost($slug: String!) {
-                post(slug: $slug) {
-                  id
-                  title
-                  slug
-                  url
-                  contentMarkdown
-                  tags {
-                    name
-                    slug
-                  }
-                  coverImage {
-                    url
-                  }
-                  subtitle
-                  dateAdded
-                  author {
-                    username
-                    name
-                  }
-                }
-              }
-            `;
+        query GetPost($slug: String!) {
+          post(slug: $slug) {
+            id
+            title
+            slug
+            url
+            contentMarkdown
+            tags {
+              name
+              slug
+            }
+            coverImage {
+              url
+            }
+            subtitle
+            dateAdded
+            author {
+              username
+              name
+            }
+          }
+        }
+      `;
 
       const response = await this.client.post("", {
         query,
@@ -165,18 +196,23 @@ export class HashnodeClient {
       });
 
       if (response.data.errors) {
-        throw new Error(
-          `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
-        );
+        const errorMessage = `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`;
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
+      logger.debug(
+        `Retrieved Hashnode post: ${response.data.data.post?.title}`,
+      );
       return response.data.data.post;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`,
-        );
+        const errorMessage =
+          error.response?.data?.errors?.[0]?.message || error.message;
+        logger.error(`Error fetching Hashnode post: ${errorMessage}`);
+        throw new Error(`Hashnode API error: ${errorMessage}`);
       }
+      logger.error(`Unexpected error fetching Hashnode post: ${error}`);
       throw error;
     }
   }
@@ -195,6 +231,7 @@ export class HashnodeClient {
     }>;
   }> {
     try {
+      logger.debug("Fetching Hashnode user info");
       const query = `
         query Me {
           me {
@@ -218,24 +255,33 @@ export class HashnodeClient {
       });
 
       if (response.data.errors) {
-        throw new Error(
-          `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
-        );
+        const errorMessage = `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`;
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
-      return response.data.data.me;
+      const userData = response.data.data.me;
+      logger.debug(`Retrieved Hashnode user: ${userData.username}`);
+      logger.debug(
+        `User has ${userData.publications?.length || 0} publications`,
+      );
+
+      return userData;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`,
-        );
+        const errorMessage =
+          error.response?.data?.errors?.[0]?.message || error.message;
+        logger.error(`Error fetching Hashnode user info: ${errorMessage}`);
+        throw new Error(`Hashnode API error: ${errorMessage}`);
       }
+      logger.error(`Unexpected error fetching Hashnode user info: ${error}`);
       throw error;
     }
   }
 
   async getUserPosts(username: string): Promise<any[]> {
     try {
+      logger.debug(`Fetching Hashnode posts for user: ${username}`);
       const query = `
         query GetUserPosts($username: String!) {
           user(username: $username) {
@@ -259,18 +305,22 @@ export class HashnodeClient {
       });
 
       if (response.data.errors) {
-        throw new Error(
-          `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`,
-        );
+        const errorMessage = `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`;
+        logger.error(errorMessage);
+        throw new Error(errorMessage);
       }
 
-      return response.data.data.user.posts;
+      const posts = response.data.data.user.posts;
+      logger.debug(`Retrieved ${posts.length} posts for ${username}`);
+      return posts;
     } catch (error) {
       if (axios.isAxiosError(error)) {
-        throw new Error(
-          `Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`,
-        );
+        const errorMessage =
+          error.response?.data?.errors?.[0]?.message || error.message;
+        logger.error(`Error fetching Hashnode user posts: ${errorMessage}`);
+        throw new Error(`Hashnode API error: ${errorMessage}`);
       }
+      logger.error(`Unexpected error fetching Hashnode user posts: ${error}`);
       throw error;
     }
   }
