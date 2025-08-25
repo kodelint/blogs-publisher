@@ -1245,14 +1245,6 @@ class Logger {
 exports.Logger = Logger;
 // Singleton instance
 exports.logger = new Logger();
-// Initialize based on environment variable
-if (process.env.DEBUGGING_ENABLED === "true") {
-    exports.logger.info("Debug logging enabled via DEBUGGING_ENABLED environment variable");
-    exports.logger.setLevel(LogLevel.DEBUG);
-}
-else {
-    exports.logger.debug("Debug logging not enabled via environment variable");
-}
 
 
 /***/ }),
