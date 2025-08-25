@@ -1,3 +1,10 @@
+# [1.1.0-develop.3](https://github.com/kodelint/blogs-publisher/compare/v1.1.0-develop.2...v1.1.0-develop.3) (2025-08-25)
+
+
+### Bug Fixes
+
+* Initialization block is not needed here anymore ([c9279e5](https://github.com/kodelint/blogs-publisher/commit/c9279e5487e50e9ab6dd3fa2bb5ad08154798673))
+
 # [1.1.0-develop.2](https://github.com/kodelint/blogs-publisher/compare/v1.1.0-develop.1...v1.1.0-develop.2) (2025-08-25)
 
 
