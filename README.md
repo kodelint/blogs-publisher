@@ -356,6 +356,13 @@ To enable debug mode, set either `true`:
 - `ACTIONS_STEP_DEBUG`
 - `DEBUGGING_ENABLED`
 
+> **Note:** I was not able to get `${{ var.ACTIONS_STEP_DEBUG }}` working, 
+so I used it as **secret** `${{ secrets.ACTIONS_RUNNER_DEBUG }}`
+```bash
+        env:
+          ACTIONS_RUNNER_DEBUG: ${{ secrets.ACTIONS_RUNNER_DEBUG }}
+```
+
 ## 🤝 Contributing
 
 Contributions are welcome!
