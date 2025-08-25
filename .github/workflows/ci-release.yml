@@ -181,7 +181,7 @@ jobs:
       - name: Test action (dry run)
         uses: ./
         with:
-          medium-token: "test-token"
+          medium_token: "test-token"
           devto_token: "test-token"
           hashnode_token: "test-token"
           dry_run: "true"
@@ -424,7 +424,7 @@ jobs:
             - name: Publish blogs
               uses: kodelint/blogs-publisher@${{ steps.get_tag.outputs.TAG_NAME }}
               with:
-                medium-token: ${{ secrets.MEDIUM_TOKEN }}
+                medium_token: ${{ secrets.MEDIUM_TOKEN }}
                 devto_token: ${{ secrets.DEVTO_TOKEN }}
                 hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
             ```

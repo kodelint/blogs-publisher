@@ -21,7 +21,7 @@ describe("Main Action", () => {
     // Mock ALL required inputs with proper values
     mockedCore.getInput.mockImplementation((key: string) => {
       const inputs: { [key: string]: string } = {
-        "medium-token": "medium-token",
+        medium_token: "medium-token",
         devto_token: "devto-token",
         hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
@@ -234,7 +234,7 @@ describe("Main Action - Branch Coverage", () => {
     // Mock some tokens as empty
     mockedCore.getInput.mockImplementation((key: string) => {
       const inputs: { [key: string]: string } = {
-        "medium-token": "",
+        medium_token: "",
         devto_token: "devto-token",
         hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
@@ -275,7 +275,7 @@ describe("Main Action - Additional Coverage", () => {
   test("should handle empty posts directory input", async () => {
     mockedCore.getInput.mockImplementation((key: string) => {
       const inputs: { [key: string]: string } = {
-        "medium-token": "medium-token",
+        medium_token: "medium-token",
         devto_token: "devto-token",
         hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
@@ -303,7 +303,7 @@ describe("Main Action - Additional Coverage", () => {
   test("should handle default path values when inputs are empty", async () => {
     mockedCore.getInput.mockImplementation((key: string) => {
       const inputs: { [key: string]: string } = {
-        "medium-token": "medium-token",
+        medium_token: "medium-token",
         devto_token: "devto-token",
         hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",

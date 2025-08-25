@@ -44,7 +44,7 @@ jobs:
       - name: Publish to blog platforms
         uses: kodelint/blogs-publisher@v1
         with:
-          medium-token: ${{ secrets.MEDIUM_TOKEN }}
+          medium_token: ${{ secrets.MEDIUM_TOKEN }}
           devto_token: ${{ secrets.DEVTO_TOKEN }}
           hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
 ```
@@ -55,7 +55,7 @@ jobs:
 - name: Publish blogs with custom paths
   uses: kodelint/blogs-publisher@v1
   with:
-    medium-token: ${{ secrets.MEDIUM_TOKEN }}
+    medium_token: ${{ secrets.MEDIUM_TOKEN }}
     devto_token: ${{ secrets.DEVTO_TOKEN }}
     hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
     hashnode_publication_id: ${{ secrets.HASHNODE_PUBLICATION_ID }}
@@ -174,8 +174,8 @@ Then use commit messages like:
 ### Inputs
 
 | Input                     | Description                               | Required | Default          |
-|---------------------------| ----------------------------------------- | -------- | ---------------- |
-| `medium-token`            | Medium Integration Token                  | No\*     | -                |
+|---------------------------|-------------------------------------------|----------|------------------|
+| `medium_token`            | Medium Integration Token                  | No\*     | -                |
 | `devto_token`             | Dev.to API Key                            | No\*     | -                |
 | `hashnode_token`          | Hashnode Personal Access Token            | No\*     | -                |
 | `hashnode_publication_id` | Hashnode Publication ID                   | No       | -                |
@@ -236,7 +236,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: kodelint/blogs-publisher@v1
         with:
-          medium-token: ${{ secrets.MEDIUM_TOKEN }}
+          medium_token: ${{ secrets.MEDIUM_TOKEN }}
           devto_token: ${{ secrets.DEVTO_TOKEN }}
           hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
 ```
@@ -261,7 +261,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: kodelint/blogs-publisher@v1
         with:
-          medium-token: ${{ secrets.MEDIUM_TOKEN }}
+          medium_token: ${{ secrets.MEDIUM_TOKEN }}
           devto_token: ${{ secrets.DEVTO_TOKEN }}
           hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
           dry_run: ${{ github.event.inputs.dry_run }}
@@ -284,7 +284,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: kodelint/blogs-publisher@v1
         with:
-          medium-token: ${{ secrets.MEDIUM_TOKEN }}
+          medium_token: ${{ secrets.MEDIUM_TOKEN }}
           use_commit_message: true
 ```
 

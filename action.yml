@@ -2,7 +2,7 @@ name: "Blogs Publisher"
 description: "Publish Markdown blogs to Medium, Dev.to, and Hashnode"
 author: "kodelint"
 inputs:
-  medium-token:
+  medium_token:
     description: "Medium Integration Token"
     required: false
   devto_token:
