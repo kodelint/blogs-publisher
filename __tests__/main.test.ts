@@ -29,7 +29,7 @@ describe("Main Action", () => {
         "medium-path": "posts/medium",
         "devto-path": "posts/devto",
         "hashnode-path": "posts/hashnode",
-        "posts-directory": ".",
+        posts_directory: ".",
       };
       return inputs[key] || "";
     });
@@ -37,7 +37,7 @@ describe("Main Action", () => {
     mockedCore.getBooleanInput.mockImplementation((key: string) => {
       const booleans: { [key: string]: boolean } = {
         "use-commit-message": false,
-        "dry-run": false,
+        dry_run: false,
         update_already_published: true,
         debugging_enabled: false, // Make sure this returns false
       };
@@ -242,7 +242,7 @@ describe("Main Action - Branch Coverage", () => {
         "medium-path": "posts/medium",
         "devto-path": "posts/devto",
         "hashnode-path": "posts/hashnode",
-        "posts-directory": ".",
+        posts_directory: ".",
       };
       return inputs[key] || "";
     });
@@ -283,7 +283,7 @@ describe("Main Action - Additional Coverage", () => {
         "medium-path": "posts/medium",
         "devto-path": "posts/devto",
         "hashnode-path": "posts/hashnode",
-        "posts-directory": "", // Empty string
+        posts_directory: "", // Empty string
       };
       return inputs[key] || "";
     });
@@ -311,7 +311,7 @@ describe("Main Action - Additional Coverage", () => {
         "medium-path": "", // Empty - should use default
         "devto-path": "", // Empty - should use default
         "hashnode-path": "", // Empty - should use default
-        "posts-directory": ".",
+        posts_directory: ".",
       };
       return inputs[key] || "";
     });

@@ -33,11 +33,11 @@ inputs:
     description: "Use commit message to determine platform (true/false)"
     required: false
     default: "false"
-  dry-run:
-    description: "Run in dry-run mode without publishing"
+  dry_run:
+    description: "Run in dry_run mode without publishing"
     required: false
     default: "false"
-  posts-directory:
+  posts_directory:
     description: "Base directory for posts"
     required: false
     default: "."

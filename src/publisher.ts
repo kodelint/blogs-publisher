@@ -537,7 +537,7 @@ export class BlogsPublisher {
         platform,
         file,
         success: true,
-        url: `https://example.com/${platform}/dry-run`,
+        url: `https://example.com/${platform}/dry_run`,
       };
     }
 

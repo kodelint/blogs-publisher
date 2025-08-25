@@ -63,8 +63,8 @@ jobs:
     devto-path: "content/devto"
     hashnode-path: "content/hashnode"
     use-commit-message: true
-    dry-run: false
-    posts-directory: "./blog"
+    dry_run: false
+    posts_directory: "./blog"
 ```
 
 ## 📂 Directory Structure
@@ -174,7 +174,7 @@ Then use commit messages like:
 ### Inputs
 
 | Input                     | Description                               | Required | Default          |
-| ------------------------- | ----------------------------------------- | -------- | ---------------- |
+|---------------------------| ----------------------------------------- | -------- | ---------------- |
 | `medium-token`            | Medium Integration Token                  | No\*     | -                |
 | `devto-token`             | Dev.to API Key                            | No\*     | -                |
 | `hashnode-token`          | Hashnode Personal Access Token            | No\*     | -                |
@@ -183,8 +183,8 @@ Then use commit messages like:
 | `devto-path`              | Dev.to posts directory pattern            | No       | `posts/devto`    |
 | `hashnode-path`           | Hashnode posts directory pattern          | No       | `posts/hashnode` |
 | `use-commit-message`      | Use commit message for platform detection | No       | `false`          |
-| `dry-run`                 | Run without publishing                    | No       | `false`          |
-| `posts-directory`         | Base directory for posts                  | No       | `.`              |
+| `dry_run`                 | Run without publishing                    | No       | `false`          |
+| `posts_directory`         | Base directory for posts                  | No       | `.`              |
 
 \*At least one platform token is required.
 
@@ -250,7 +250,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Run in dry-run mode"
+        description: "Run in dry_run mode"
         required: false
         default: "true"
 
@@ -264,7 +264,7 @@ jobs:
           medium-token: ${{ secrets.MEDIUM_TOKEN }}
           devto-token: ${{ secrets.DEVTO_TOKEN }}
           hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
-          dry-run: ${{ github.event.inputs.dry_run }}
+          dry_run: ${{ github.event.inputs.dry_run }}
 ```
 
 ### Selective Publishing
@@ -337,7 +337,7 @@ The project maintains 80%+ test coverage across:
 #### "File not found"
 
 - **Cause**: The markdown file doesn't exist in the specified location
-- **Solution**: Check the file path and `posts-directory` configuration
+- **Solution**: Check the file path and `posts_directory` configuration
 
 ### Debug Mode
 

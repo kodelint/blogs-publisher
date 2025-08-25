@@ -184,7 +184,7 @@ jobs:
           medium-token: "test-token"
           devto-token: "test-token"
           hashnode-token: "test-token"
-          dry-run: "true"
+          dry_run: "true"
 
   # Security checks
   security-check:

@@ -27,8 +27,8 @@ export async function run(): Promise<void> {
       devtoPath: core.getInput("devto-path") || "posts/devto",
       hashnodePath: core.getInput("hashnode-path") || "posts/hashnode",
       useCommitMessage: core.getBooleanInput("use-commit-message"),
-      dryRun: core.getBooleanInput("dry-run"),
-      postsDirectory: core.getInput("posts-directory") || ".",
+      dryRun: core.getBooleanInput("dry_run"),
+      postsDirectory: core.getInput("posts_directory") || ".",
       githubToken: core.getInput("github-token"),
       updateAlreadyPublished:
         core.getBooleanInput("update_already_published") || true,

@@ -757,7 +757,7 @@ describe("BlogsPublisher - Comprehensive Test Coverage", () => {
       );
 
       expect(result.success).toBe(true);
-      expect(result.url).toBe("https://example.com/medium/dry-run");
+      expect(result.url).toBe("https://example.com/medium/dry_run");
       expect(result.platform).toBe("medium");
       expect(result.file).toBe("test.md");
       expect(mockedLogger.info).toHaveBeenCalledWith(
