@@ -351,7 +351,10 @@ Enable debug logging in your workflow:
   env:
     ACTIONS_STEP_DEBUG: true # Native to GitHub Action
 ```
-Add `DEBUGGING_ENABLED` to your repository environment variables or enable `ACTIONS_STEP_DEBUG`
+To enable debug mode, set either `true`:
+
+- `ACTIONS_STEP_DEBUG`
+- `DEBUGGING_ENABLED`
 
 ## 🤝 Contributing
 

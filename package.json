@@ -1,6 +1,6 @@
 {
   "name": "blogs-publisher",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "description": "A GitHub Action to publish markdown blog posts to Medium, Dev.to, and Hashnode platform",
   "main": "dist/index.js",
   "scripts": {
