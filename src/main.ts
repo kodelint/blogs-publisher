@@ -21,7 +21,7 @@ export async function run(): Promise<void> {
     const config: Config = {
       mediumToken: core.getInput("medium-token"),
       devtoToken: core.getInput("devto-token"),
-      hashnodeToken: core.getInput("hashnode-token"),
+      hashnodeToken: core.getInput("hashnode_token"),
       hashnodePublicationId: core.getInput("hashnode_publication_id"),
       mediumPath: core.getInput("medium_path") || "posts/medium",
       devtoPath: core.getInput("devto_path") || "posts/devto",

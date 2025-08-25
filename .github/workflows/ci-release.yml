@@ -183,7 +183,7 @@ jobs:
         with:
           medium-token: "test-token"
           devto-token: "test-token"
-          hashnode-token: "test-token"
+          hashnode_token: "test-token"
           dry_run: "true"
 
   # Security checks
@@ -426,7 +426,7 @@ jobs:
               with:
                 medium-token: ${{ secrets.MEDIUM_TOKEN }}
                 devto-token: ${{ secrets.DEVTO_TOKEN }}
-                hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
+                hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
             ```
           files: |
             dist/**

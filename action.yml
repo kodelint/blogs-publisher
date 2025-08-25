@@ -8,7 +8,7 @@ inputs:
   devto-token:
     description: "Dev.to API Key"
     required: false
-  hashnode-token:
+  hashnode_token:
     description: "Hashnode Personal Access Token"
     required: false
   github_token:

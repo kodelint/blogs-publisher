@@ -141,7 +141,7 @@ describe("BlogsPublisher - Comprehensive Test Coverage", () => {
       new BlogsPublisher(config);
       expect(mockedMediumClient).toHaveBeenCalledWith("medium-token");
       expect(mockedDevtoClient).toHaveBeenCalledWith("devto-token");
-      expect(mockedHashnodeClient).toHaveBeenCalledWith("hashnode-token");
+      expect(mockedHashnodeClient).toHaveBeenCalledWith("hashnode_token");
       expect(mockedMarkdownProcessor).toHaveBeenCalled();
       expect(process.env.GITHUB_TOKEN).toBe("github_token");
     });
@@ -1550,7 +1550,7 @@ describe("BlogsPublisher - Comprehensive Test Coverage", () => {
       new BlogsPublisher(config);
       expect(mockedMediumClient).toHaveBeenCalledWith("medium-token");
       expect(mockedDevtoClient).toHaveBeenCalledWith("devto-token");
-      expect(mockedHashnodeClient).toHaveBeenCalledWith("hashnode-token");
+      expect(mockedHashnodeClient).toHaveBeenCalledWith("hashnode_token");
     });
 
     test("should return empty array for unsupported event", async () => {

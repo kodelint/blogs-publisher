@@ -23,7 +23,7 @@ describe("Main Action", () => {
       const inputs: { [key: string]: string } = {
         "medium-token": "medium-token",
         "devto-token": "devto-token",
-        "hashnode-token": "hashnode-token",
+        hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
         github_token: "github-token",
         medium_path: "posts/medium",
@@ -236,7 +236,7 @@ describe("Main Action - Branch Coverage", () => {
       const inputs: { [key: string]: string } = {
         "medium-token": "",
         "devto-token": "devto-token",
-        "hashnode-token": "hashnode-token",
+        hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
         github_token: "github-token",
         medium_path: "posts/medium",
@@ -277,7 +277,7 @@ describe("Main Action - Additional Coverage", () => {
       const inputs: { [key: string]: string } = {
         "medium-token": "medium-token",
         "devto-token": "devto-token",
-        "hashnode-token": "hashnode-token",
+        hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
         github_token: "github-token",
         medium_path: "posts/medium",
@@ -305,7 +305,7 @@ describe("Main Action - Additional Coverage", () => {
       const inputs: { [key: string]: string } = {
         "medium-token": "medium-token",
         "devto-token": "devto-token",
-        "hashnode-token": "hashnode-token",
+        hashnode_token: "hashnode-token",
         hashnode_publication_id: "hashnode-pub-id",
         github_token: "github-token",
         medium_path: "", // Empty - should use default

@@ -46,7 +46,7 @@ jobs:
         with:
           medium-token: ${{ secrets.MEDIUM_TOKEN }}
           devto-token: ${{ secrets.DEVTO_TOKEN }}
-          hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
+          hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
 ```
 
 ### Advanced Configuration
@@ -57,7 +57,7 @@ jobs:
   with:
     medium-token: ${{ secrets.MEDIUM_TOKEN }}
     devto-token: ${{ secrets.DEVTO_TOKEN }}
-    hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
+    hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
     hashnode_publication_id: ${{ secrets.HASHNODE_PUBLICATION_ID }}
     medium_path: "content/medium"
     devto_path: "content/devto"
@@ -177,7 +177,7 @@ Then use commit messages like:
 |---------------------------| ----------------------------------------- | -------- | ---------------- |
 | `medium-token`            | Medium Integration Token                  | No\*     | -                |
 | `devto-token`             | Dev.to API Key                            | No\*     | -                |
-| `hashnode-token`          | Hashnode Personal Access Token            | No\*     | -                |
+| `hashnode_token`          | Hashnode Personal Access Token            | No\*     | -                |
 | `hashnode_publication_id` | Hashnode Publication ID                   | No       | -                |
 | `medium_path`             | Medium posts directory pattern            | No       | `posts/medium`   |
 | `devto_path`              | Dev.to posts directory pattern            | No       | `posts/devto`    |
@@ -238,7 +238,7 @@ jobs:
         with:
           medium-token: ${{ secrets.MEDIUM_TOKEN }}
           devto-token: ${{ secrets.DEVTO_TOKEN }}
-          hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
+          hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
 ```
 
 ### Manual Trigger with Dry Run
@@ -263,7 +263,7 @@ jobs:
         with:
           medium-token: ${{ secrets.MEDIUM_TOKEN }}
           devto-token: ${{ secrets.DEVTO_TOKEN }}
-          hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
+          hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
           dry_run: ${{ github.event.inputs.dry_run }}
 ```
 
