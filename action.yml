@@ -11,6 +11,9 @@ inputs:
   hashnode-token:
     description: "Hashnode Personal Access Token"
     required: false
+  github-token:
+    description: 'GitHub token for accessing repository contents'
+    required: true
   hashnode-publication-id:
     description: "Hashnode Publication ID (optional)"
     required: false
@@ -38,6 +41,14 @@ inputs:
     description: "Base directory for posts"
     required: false
     default: "."
+  update_already_published:
+    description: 'Update posts that were already published'
+    default: 'true'
+    required: false
+  debugging_enabled:
+    description: 'Enable debug logging'
+    default: 'false'
+    required: false
 outputs:
   published-posts:
     description: "JSON array of successfully published posts"
