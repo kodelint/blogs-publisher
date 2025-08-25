@@ -31,7 +31,7 @@ export async function run(): Promise<void> {
       postsDirectory: core.getInput("posts-directory") || ".",
       githubToken: core.getInput("github-token"),
       updateAlreadyPublished:
-        core.getBooleanInput("update-already-published") || true,
+        core.getBooleanInput("update_already_published") || true,
       debuggingEnabled,
     };
 
