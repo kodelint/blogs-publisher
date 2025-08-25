@@ -28,7 +28,7 @@ describe("Main Action", () => {
         "github-token": "github-token",
         "medium-path": "posts/medium",
         "devto-path": "posts/devto",
-        "hashnode-path": "posts/hashnode",
+        hashnode_path: "posts/hashnode",
         posts_directory: ".",
       };
       return inputs[key] || "";
@@ -241,7 +241,7 @@ describe("Main Action - Branch Coverage", () => {
         "github-token": "github-token",
         "medium-path": "posts/medium",
         "devto-path": "posts/devto",
-        "hashnode-path": "posts/hashnode",
+        hashnode_path: "posts/hashnode",
         posts_directory: ".",
       };
       return inputs[key] || "";
@@ -282,7 +282,7 @@ describe("Main Action - Additional Coverage", () => {
         "github-token": "github-token",
         "medium-path": "posts/medium",
         "devto-path": "posts/devto",
-        "hashnode-path": "posts/hashnode",
+        hashnode_path: "posts/hashnode",
         posts_directory: "", // Empty string
       };
       return inputs[key] || "";
@@ -310,7 +310,7 @@ describe("Main Action - Additional Coverage", () => {
         "github-token": "github-token",
         "medium-path": "", // Empty - should use default
         "devto-path": "", // Empty - should use default
-        "hashnode-path": "", // Empty - should use default
+        hashnode_path: "", // Empty - should use default
         posts_directory: ".",
       };
       return inputs[key] || "";

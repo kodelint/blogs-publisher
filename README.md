@@ -61,7 +61,7 @@ jobs:
     hashnode-publication-id: ${{ secrets.HASHNODE_PUBLICATION_ID }}
     medium-path: "content/medium"
     devto-path: "content/devto"
-    hashnode-path: "content/hashnode"
+    hashnode_path: "content/hashnode"
     use_commit_message: true
     dry_run: false
     posts_directory: "./blog"
@@ -92,7 +92,7 @@ You can customize the directory structure using the path inputs:
 with:
   medium-path: "blog/medium-posts"
   devto-path: "articles/dev"
-  hashnode-path: "content/hashnode"
+  hashnode_path: "content/hashnode"
 ```
 
 ## 📝 Frontmatter Support
@@ -181,7 +181,7 @@ Then use commit messages like:
 | `hashnode-publication-id` | Hashnode Publication ID                   | No       | -                |
 | `medium-path`             | Medium posts directory pattern            | No       | `posts/medium`   |
 | `devto-path`              | Dev.to posts directory pattern            | No       | `posts/devto`    |
-| `hashnode-path`           | Hashnode posts directory pattern          | No       | `posts/hashnode` |
+| `hashnode_path`           | Hashnode posts directory pattern          | No       | `posts/hashnode` |
 | `use_commit_message`      | Use commit message for platform detection | No       | `false`          |
 | `dry_run`                 | Run without publishing                    | No       | `false`          |
 | `posts_directory`         | Base directory for posts                  | No       | `.`              |

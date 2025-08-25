@@ -25,7 +25,7 @@ inputs:
     description: "Path pattern for Dev.to posts"
     required: false
     default: "posts/devto"
-  hashnode-path:
+  hashnode_path:
     description: "Path pattern for Hashnode posts"
     required: false
     default: "posts/hashnode"

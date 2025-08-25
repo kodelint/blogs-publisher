@@ -25,7 +25,7 @@ export async function run(): Promise<void> {
       hashnodePublicationId: core.getInput("hashnode-publication-id"),
       mediumPath: core.getInput("medium-path") || "posts/medium",
       devtoPath: core.getInput("devto-path") || "posts/devto",
-      hashnodePath: core.getInput("hashnode-path") || "posts/hashnode",
+      hashnodePath: core.getInput("hashnode_path") || "posts/hashnode",
       useCommitMessage: core.getBooleanInput("use_commit_message"),
       dryRun: core.getBooleanInput("dry_run"),
       postsDirectory: core.getInput("posts_directory") || ".",
