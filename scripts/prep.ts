@@ -23,53 +23,62 @@ function runCommand(command: string, description: string): RunCommandResult {
 async function main(): Promise<void> {
   console.log("🚀 Starting preparation script...");
 
-  // Try different dependency installation methods
-  const depsResults = [
-    runCommand("npm ci", "Installing dependencies with npm ci"),
-    runCommand("npm install", "Installing dependencies with npm install"),
-    runCommand("npm run deps:update", "Updating dependencies"),
+  // Try different dependency installation methods in order
+  const dependencyCommands = [
+    { command: "npm ci", description: "Installing dependencies with npm ci" },
+    { command: "npm install", description: "Installing dependencies with npm install" },
+    { command: "npm run deps:update", description: "Updating dependencies" },
   ];
 
-  const depsInstalled = depsResults.some((result) => result.success);
+  let depsInstalled = false;
+  for (const { command, description } of dependencyCommands) {
+    const result = runCommand(command, description);
+    if (result.success) {
+      depsInstalled = true;
+      break;
+    }
+  }
 
   if (!depsInstalled) {
     console.error("❌ Failed to install dependencies");
     process.exit(1);
   }
 
-  // Run tests
-  const testResult = runCommand("npm test", "Running tests");
-  if (!testResult.success) {
-    process.exit(1);
-  }
+  // Build and package commands
+  const buildCommands = [
+    { command: "npm run build", description: "Building project" },
+    { command: "npm run package", description: "Packaging with ncc" },
+  ];
 
-  const coverageResult = runCommand(
-    "npm run test:coverage",
-    "Running test coverage",
-  );
-  if (!coverageResult.success) {
-    process.exit(1);
-  }
-
-  // Linting
-  const lintResult = runCommand("npm run lint", "Running lint check");
-  if (!lintResult.success) {
-    console.log("⚠️  Lint errors found, attempting to fix...");
-    const lintFixResult = runCommand("npm run lint:fix", "Fixing lint errors");
-    if (!lintFixResult.success) {
+  for (const { command, description } of buildCommands) {
+    const result = runCommand(command, description);
+    if (!result.success) {
       process.exit(1);
     }
   }
 
-  // Formatting
-  const formatCheckResult = runCommand(
-    "npm run format:check",
-    "Checking code format",
-  );
-  if (!formatCheckResult.success) {
-    console.log("⚠️  Format issues found, formatting code...");
-    const formatResult = runCommand("npm run format", "Formatting code");
-    if (!formatResult.success) {
+  // Linting and formatting
+  const lintFormatCommands = [
+    { command: "npm run lint:fix", description: "Fixing lint errors" },
+    { command: "npm run format", description: "Formatting code" },
+  ];
+
+  for (const { command, description } of lintFormatCommands) {
+    const result = runCommand(command, description);
+    if (!result.success) {
+      process.exit(1);
+    }
+  }
+
+  // Testing
+  const testCommands = [
+    { command: "npm test", description: "Running tests" },
+    { command: "npm run test:coverage", description: "Running test coverage" },
+  ];
+
+  for (const { command, description } of testCommands) {
+    const result = runCommand(command, description);
+    if (!result.success) {
       process.exit(1);
     }
   }

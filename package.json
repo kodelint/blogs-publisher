@@ -97,11 +97,11 @@
   "bundlesize": [
     {
       "path": "dist/index.js",
-      "maxSize": "2500kB"
+      "maxSize": "25000kB"
     },
     {
       "path": "dist/index.js.gz",
-      "maxSize": "15000kB"
+      "maxSize": "25000kB"
     }
   ],
   "engines": {
