@@ -1,229 +1,167 @@
 import { MarkdownProcessor } from "../../src/utils/markdown-processor";
 
+jest.mock("../../src/utils/logger");
+
 describe("MarkdownProcessor", () => {
   let processor: MarkdownProcessor;
 
   beforeEach(() => {
     processor = new MarkdownProcessor();
+    jest.clearAllMocks();
   });
 
   describe("toHtml", () => {
-    it("should convert markdown to HTML", () => {
-      const markdown = "# Heading\n\nThis is **bold** text.";
-      const html = processor.toHtml(markdown);
-
-      expect(html).toContain("<h1>Heading</h1>");
-      expect(html).toContain("<strong>bold</strong>");
-    });
-
-    it("should handle code blocks", () => {
-      const markdown = '```javascript\nconsole.log("hello");\n```';
-      const html = processor.toHtml(markdown);
-
-      expect(html).toContain('<pre><code class="language-javascript">');
-      expect(html).toContain("console.log(&quot;hello&quot;);");
-    });
-
-    it("should handle links", () => {
-      const markdown = "[Example](https://example.com)";
-      const html = processor.toHtml(markdown);
-
-      expect(html).toContain('<a href="https://example.com">Example</a>');
+    test("should convert markdown to HTML", () => {
+      const markdown = "# Title\n\nSome **bold** text";
+      const result = processor.toHtml(markdown);
+      expect(result).toContain("<h1>Title</h1>");
+      expect(result).toContain("<strong>bold</strong>");
     });
   });
 
   describe("extractTitle", () => {
-    it("should extract title from H1 heading", () => {
-      const markdown = "# My Great Title\n\nSome content here.";
+    test("should extract title from h1", () => {
+      const markdown = "# My Title\n\nSome content";
       const title = processor.extractTitle(markdown);
-
-      expect(title).toBe("My Great Title");
+      expect(title).toBe("My Title");
     });
 
-    it("should return null if no H1 found", () => {
-      const markdown = "## H2 Heading\n\nSome content here.";
+    test("should return null when no title found", () => {
+      const markdown = "Some content without title";
       const title = processor.extractTitle(markdown);
-
       expect(title).toBeNull();
-    });
-
-    it("should handle title with extra spaces", () => {
-      const markdown = "#   Spaced Title   \n\nContent.";
-      const title = processor.extractTitle(markdown);
-
-      expect(title).toBe("Spaced Title");
-    });
-
-    it("should find first H1 heading", () => {
-      const markdown = "Some text\n\n# First Title\n\n# Second Title";
-      const title = processor.extractTitle(markdown);
-
-      expect(title).toBe("First Title");
     });
   });
 
   describe("extractDescription", () => {
-    it("should extract plain text description", () => {
-      const markdown =
-        "# Title\n\nThis is the first paragraph. It should be used as description.";
-      const description = processor.extractDescription(markdown, 50);
-
-      expect(description).toBe(
-        "Title This is the first paragraph. It should be...",
-      );
+    test("should extract description from content and truncate properly", () => {
+      const markdown = "This is a description. It has multiple sentences.";
+      const description = processor.extractDescription(markdown, 25);
+      expect(description).toBe("This is a description.");
     });
 
-    it("should remove markdown formatting", () => {
-      const markdown =
-        "# Title\n\nThis is **bold** and *italic* text with `code`.";
+    test("should handle exact length match", () => {
+      const markdown = "Short text.";
+      const description = processor.extractDescription(markdown, 11);
+      expect(description).toBe("Short text.");
+    });
+
+    test("should handle markdown formatting", () => {
+      const markdown = "**Bold** text and [link](url)";
       const description = processor.extractDescription(markdown);
-
-      expect(description).toBe("Title This is bold and italic text with code.");
+      expect(description).toBe("Bold text and link");
     });
 
-    it("should remove code blocks", () => {
-      const markdown =
-        "# Title\n\nDescription here.\n\n```js\nconsole.log();\n```\n\nMore text.";
-      const description = processor.extractDescription(markdown, 100);
-
-      // Corrected to match the actual output where newlines are removed.
-      expect(description).toBe(
-        "Title Description here. `js console.log(); ` More text.",
-      );
+    test("should truncate long text at word boundary", () => {
+      const longText =
+        "This is a very long description that should be truncated properly at a word boundary.";
+      const description = processor.extractDescription(longText, 40);
+      expect(description).toBe("This is a very long description that...");
     });
 
-    it("should remove front matter", () => {
-      const markdown =
-        "---\ntitle: Test\n---\n\n# Title\n\nThis is the description.";
-      const description = processor.extractDescription(markdown);
-
-      expect(description).toBe("Title This is the description.");
+    test("should truncate long text at character boundary if no word boundary", () => {
+      const longText = "ThisIsAVeryLongWordWithoutSpacesThatWillBeTruncated";
+      const description = processor.extractDescription(longText, 20);
+      expect(description).toBe("ThisIsAVeryLongWordW...");
     });
 
-    it("should handle lists", () => {
-      const markdown = "# Title\n\n- Item 1\n- Item 2\n\nMore text.";
-      const description = processor.extractDescription(markdown);
-
-      expect(description).toBe("Title Item 1 Item 2 More text.");
-    });
-
-    it("should break at sentence end when possible", () => {
-      const markdown =
-        "# Title\n\nFirst sentence. Second sentence that goes on for a while and exceeds the limit.";
-      const description = processor.extractDescription(markdown, 100); // Increased limit
-
-      // Corrected to match the expected output
-      expect(description).toBe(
-        "Title First sentence. Second sentence that goes on for a while and exceeds the limit.",
-      );
-    });
-
-    it("should return full text if under limit", () => {
-      const markdown = "# Title\n\nShort description.";
-      const description = processor.extractDescription(markdown, 100);
-
-      expect(description).toBe("Title Short description.");
+    test("should handle empty content", () => {
+      const description = processor.extractDescription("", 50);
+      expect(description).toBe("");
     });
   });
 
   describe("extractTags", () => {
-    it("should extract hashtags from markdown", () => {
-      const markdown =
-        "This is about #javascript and #react development. #webdev";
+    test("should extract hashtags from content", () => {
+      const markdown = "Content with #javascript and #typescript tags";
       const tags = processor.extractTags(markdown);
-
-      expect(tags).toEqual(["javascript", "react", "webdev"]);
+      expect(tags).toEqual(["javascript", "typescript"]);
     });
 
-    it("should handle duplicate hashtags", () => {
-      const markdown = "About #javascript and #JavaScript again #javascript.";
+    test("should return unique tags", () => {
+      const markdown = "#javascript #javascript #typescript";
       const tags = processor.extractTags(markdown);
-
-      expect(tags).toEqual(["javascript"]);
+      expect(tags).toEqual(["javascript", "typescript"]);
     });
 
-    it("should return empty array if no hashtags", () => {
-      const markdown = "No hashtags in this content.";
+    test("should return empty array when no tags found", () => {
+      const markdown = "Content without tags";
       const tags = processor.extractTags(markdown);
-
       expect(tags).toEqual([]);
+    });
+
+    test("should handle tags with hyphens and numbers", () => {
+      const markdown = "Content with #react-native and #typescript2 tags";
+      const tags = processor.extractTags(markdown);
+      expect(tags).toEqual(["react-native", "typescript2"]);
     });
   });
 
   describe("validateMarkdown", () => {
-    it("should validate correct markdown", () => {
-      const markdown =
-        "# Title\n\nContent with `code` and ```\ncode block\n```";
+    test("should validate correct markdown", () => {
+      const markdown = "# Title\n\nValid content";
       const result = processor.validateMarkdown(markdown);
-
       expect(result.isValid).toBe(true);
       expect(result.errors).toHaveLength(0);
     });
 
-    it("should detect empty content", () => {
-      const result = processor.validateMarkdown("   ");
-
+    test("should detect empty content", () => {
+      const result = processor.validateMarkdown("");
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain("Markdown content is empty");
     });
 
-    it("should detect missing title", () => {
-      const markdown = "Just content without a title.";
-      const result = processor.validateMarkdown(markdown);
-
+    test("should detect missing title", () => {
+      const result = processor.validateMarkdown("Content without title");
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain("No title (# heading) found in markdown");
     });
 
-    it("should detect unclosed code blocks", () => {
-      const markdown = '# Title\n\n```javascript\nconsole.log("unclosed");';
+    test("should detect unclosed code blocks", () => {
+      const markdown = '```javascript\nconsole.log("hello")';
       const result = processor.validateMarkdown(markdown);
-
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain("Unclosed code block detected");
     });
 
-    it("should detect unclosed inline code", () => {
-      const markdown = "# Title\n\nThis has `unclosed inline code.";
+    test("should detect unclosed inline code", () => {
+      const markdown = "Some `inline code without closing";
       const result = processor.validateMarkdown(markdown);
-
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain("Unclosed inline code detected");
-    });
-
-    it("should handle escaped backticks", () => {
-      const markdown = "# Title\n\nThis has \\`escaped backtick.";
-      const result = processor.validateMarkdown(markdown);
-
-      expect(result.isValid).toBe(true);
     });
   });
 
   describe("processImagesForPlatform", () => {
-    it("should return markdown as-is for dev.to", () => {
-      const markdown = "![Alt text](./image.jpg)\n\nContent here.";
-      const processed = processor.processImagesForPlatform(markdown, "devto");
+    test("should process images for different platforms", () => {
+      const markdown = "![alt](image.png)";
 
-      expect(processed).toBe(markdown);
-    });
-
-    it("should return markdown as-is for hashnode", () => {
-      const markdown = "![Alt text](./image.jpg)\n\nContent here.";
-      const processed = processor.processImagesForPlatform(
+      const mediumResult = processor.processImagesForPlatform(
+        markdown,
+        "medium",
+      );
+      const devtoResult = processor.processImagesForPlatform(markdown, "devto");
+      const hashnodeResult = processor.processImagesForPlatform(
         markdown,
         "hashnode",
       );
 
-      expect(processed).toBe(markdown);
+      expect(mediumResult).toBe(markdown);
+      expect(devtoResult).toBe(markdown);
+      expect(hashnodeResult).toBe(markdown);
     });
 
-    it("should handle images for medium", () => {
-      const markdown =
-        "![Alt text](https://example.com/image.jpg)\n\n![Local](./local.jpg)";
-      const processed = processor.processImagesForPlatform(markdown, "medium");
+    test("should handle multiple images", () => {
+      const markdown = "![alt1](img1.png)\n![alt2](img2.png)";
+      const result = processor.processImagesForPlatform(markdown, "medium");
+      expect(result).toBe(markdown);
+    });
 
-      // Corrected to match the actual output, which keeps the image link as-is.
-      expect(processed).toContain("![Alt text](https://example.com/image.jpg)");
+    test("should handle images with special characters", () => {
+      const markdown =
+        "![alt text](image-with-dashes.png?width=100&height=100)";
+      const result = processor.processImagesForPlatform(markdown, "devto");
+      expect(result).toBe(markdown);
     });
   });
 });

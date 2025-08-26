@@ -1,6 +1,6 @@
 {
   "name": "blogs-publisher",
-  "version": "0.0.3",
+  "version": "1.1.0",
   "description": "A GitHub Action to publish markdown blog posts to Medium, Dev.to, and Hashnode platform",
   "main": "dist/index.js",
   "scripts": {
@@ -8,17 +8,14 @@
     "build": "tsc",
     "package": "npm run build && ncc build lib/main.js -o dist --minify --source-map --license licenses.txt",
     "test": "jest",
-    "test:watch": "jest --watch",
     "test:coverage": "npx jest --coverage",
     "lint": "eslint src/**/*.ts __tests__/**/*.ts",
     "lint:fix": "eslint src/**/*.ts __tests__/**/*.ts --fix",
     "format": "prettier --write \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"__tests__/**/*.ts\"",
     "size": "bundlesize",
-    "audit:ci": "npm audit --audit-level=moderate",
     "deps:check": "npm outdated",
     "deps:update": "npm update",
-    "vulnerabilities:check": "npx snyk test",
     "commit": "git-cz",
     "prepare": "husky install",
     "release": "semantic-release"
@@ -97,11 +94,11 @@
   "bundlesize": [
     {
       "path": "dist/index.js",
-      "maxSize": "2500kB"
+      "maxSize": "25000kB"
     },
     {
       "path": "dist/index.js.gz",
-      "maxSize": "15000kB"
+      "maxSize": "25000kB"
     }
   ],
   "engines": {

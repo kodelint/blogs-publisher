@@ -3,509 +3,532 @@ import { DevtoClient } from "../../src/clients/devto";
 import { BlogPost } from "../../src/types";
 
 jest.mock("axios");
+jest.mock("../../src/utils/logger");
+
 const mockedAxios = axios as jest.Mocked<typeof axios>;
 
 describe("DevtoClient", () => {
   let client: DevtoClient;
-  let mockAxiosInstance: jest.Mocked<any>;
+  const apiKey = "test-api-key";
+
+  // Helper function to create a blog post
+  const createBlogPost = (overrides: Partial<BlogPost> = {}): BlogPost => ({
+    title: "Test Post",
+    content: "Test content",
+    tags: ["test", "typescript", "javascript", "node", "web"],
+    published: true,
+    description: "Test description",
+    cover_image: "test.jpg",
+    canonical_url: "https://example.com/original",
+    series: undefined,
+    ...overrides,
+  });
 
   beforeEach(() => {
-    mockAxiosInstance = {
+    jest.clearAllMocks();
+    // Setup default mock for axios instance
+    const mockAxiosInstance = {
       get: jest.fn(),
       post: jest.fn(),
       put: jest.fn(),
     };
-
-    mockedAxios.create.mockReturnValue(mockAxiosInstance);
-    client = new DevtoClient("test-api-key");
+    mockedAxios.create.mockReturnValue(mockAxiosInstance as any);
+    client = new DevtoClient(apiKey);
   });
 
-  afterEach(() => {
-    jest.clearAllMocks();
-  });
-
-  // Add these tests to devto.test.ts
-
-  describe("DevtoClient - Error Handling", () => {
-    it("should handle non-Axios errors", async () => {
-      const client = new DevtoClient("test-api-key");
-      const blogPost: BlogPost = {
-        title: "Test Post",
-        content: "Content",
-        tags: [],
-        published: true,
-      };
-
-      const error = new Error("Generic error");
-      mockedAxios.isAxiosError.mockReturnValue(false);
-      mockAxiosInstance.post.mockRejectedValueOnce(error);
-
-      await expect(client.publishPost(blogPost)).rejects.toThrow(
-        "Generic error",
-      );
-    });
-
-    it("should handle Axios errors without response", async () => {
-      const client = new DevtoClient("test-api-key");
-      const blogPost: BlogPost = {
-        title: "Test Post",
-        content: "Content",
-        tags: [],
-        published: true,
-      };
-
-      const error = {
-        isAxiosError: true,
-        message: "Network error",
-      };
-
-      mockedAxios.isAxiosError.mockReturnValue(true);
-      mockAxiosInstance.post.mockRejectedValueOnce(error);
-
-      await expect(client.publishPost(blogPost)).rejects.toThrow(
-        "Dev.to API error: Network error",
-      );
-    });
-
-    it("should handle non-Axios errors in publishPost", async () => {
-      const client = new DevtoClient("test-api-key");
-      const blogPost: BlogPost = {
-        title: "Test Post",
-        content: "Content",
-        tags: [],
-        published: true,
-      };
-
-      const error = new Error("Generic error");
-      mockedAxios.isAxiosError.mockReturnValue(false);
-      mockAxiosInstance.post.mockRejectedValueOnce(error);
-
-      await expect(client.publishPost(blogPost)).rejects.toThrow(
-        "Generic error",
-      );
-    });
-
-    it("should handle Axios errors without response in publishPost", async () => {
-      const client = new DevtoClient("test-api-key");
-      const blogPost: BlogPost = {
-        title: "Test Post",
-        content: "Content",
-        tags: [],
-        published: true,
-      };
-
-      const error = {
-        isAxiosError: true,
-        message: "Network error",
-      };
-
-      mockedAxios.isAxiosError.mockReturnValue(true);
-      mockAxiosInstance.post.mockRejectedValueOnce(error);
-
-      await expect(client.publishPost(blogPost)).rejects.toThrow(
-        "Dev.to API error: Network error",
-      );
-    });
-
-    it("should handle non-Axios errors in getPost", async () => {
-      const client = new DevtoClient("test-api-key");
-      const error = new Error("Generic error");
-
-      mockedAxios.isAxiosError.mockReturnValue(false);
-      mockAxiosInstance.get.mockRejectedValueOnce(error);
-
-      await expect(client.getPost(123)).rejects.toThrow("Generic error");
-    });
-
-    it("should handle non-Axios errors in getUserPosts", async () => {
-      const client = new DevtoClient("test-api-key");
-      const error = new Error("Generic error");
-
-      mockedAxios.isAxiosError.mockReturnValue(false);
-      mockAxiosInstance.get.mockRejectedValueOnce(error);
-
-      await expect(client.getUserPosts("testuser")).rejects.toThrow(
-        "Generic error",
-      );
-    });
-
-    it("should handle non-Axios errors in updatePost", async () => {
-      const client = new DevtoClient("test-api-key");
-      const blogPost: BlogPost = {
-        title: "Test Post",
-        content: "Content",
-        tags: [],
-        published: true,
-      };
-
-      const error = new Error("Generic error");
-      mockedAxios.isAxiosError.mockReturnValue(false);
-      mockAxiosInstance.put.mockRejectedValueOnce(error);
-
-      await expect(client.updatePost(123, blogPost)).rejects.toThrow(
-        "Generic error",
-      );
-    });
-
-    it("should handle non-Axios errors in getMe", async () => {
-      const client = new DevtoClient("test-api-key");
-      const error = new Error("Generic error");
-
-      mockedAxios.isAxiosError.mockReturnValue(false);
-      mockAxiosInstance.get.mockRejectedValueOnce(error);
-
-      await expect(client.getMe()).rejects.toThrow("Generic error");
-    });
-  });
-
-  describe("publishPost", () => {
-    it("should publish a post successfully", async () => {
-      const blogPost: BlogPost = {
-        title: "Test Post",
-        content: "# Test Post\n\nThis is content.",
-        tags: ["javascript", "tutorial"],
-        published: true,
-        series: "My Series",
-        canonical_url: "https://example.com/original",
-        description: "Test description",
-        cover_image: "https://example.com/image.jpg",
-      };
-
-      mockAxiosInstance.post.mockResolvedValueOnce({
-        data: {
-          id: 123,
-          url: "https://dev.to/user/test-post-123",
+  // 1. CONSTRUCTOR AND INITIALIZATION TESTS
+  describe("Constructor and Initialization", () => {
+    test("should initialize with correct base URL and headers", () => {
+      expect(mockedAxios.create).toHaveBeenCalledWith({
+        baseURL: "https://dev.to/api",
+        headers: {
+          "api-key": apiKey,
+          "Content-Type": "application/json",
         },
       });
+    });
+
+    test("should handle empty API key", () => {
+      new DevtoClient(""); // Remove the assignment to emptyClient
+      expect(mockedAxios.create).toHaveBeenCalledWith({
+        baseURL: "https://dev.to/api",
+        headers: {
+          "api-key": "",
+          "Content-Type": "application/json",
+        },
+      });
+    });
+  });
+
+  // 2. PUBLISH POST TESTS
+  describe("publishPost - Complete Coverage", () => {
+    test("should publish post successfully with all fields", async () => {
+      const blogPost = createBlogPost();
+      const mockResponse = {
+        data: {
+          id: 123,
+          url: "https://dev.to/test",
+          title: "Test Post",
+        },
+      };
+
+      (client as any).client.post.mockResolvedValue(mockResponse);
 
       const result = await client.publishPost(blogPost);
 
-      expect(result.id).toBe(123);
-      expect(result.url).toBe("https://dev.to/user/test-post-123");
-      expect(mockAxiosInstance.post).toHaveBeenCalledWith("/articles", {
-        article: {
+      expect(result).toEqual({
+        id: 123,
+        url: "https://dev.to/test",
+      });
+      expect((client as any).client.post).toHaveBeenCalledWith("/articles", {
+        article: expect.objectContaining({
           title: "Test Post",
-          body_markdown: "# Test Post\n\nThis is content.",
+          body_markdown: "Test content",
           published: true,
-          tags: ["javascript", "tutorial"],
-          series: "My Series",
-          canonical_url: "https://example.com/original",
           description: "Test description",
-          cover_image: "https://example.com/image.jpg",
-          main_image: "https://example.com/image.jpg",
-        },
+          canonical_url: "https://example.com/original",
+        }),
       });
     });
 
-    it("should limit tags to 4", async () => {
-      const blogPost: BlogPost = {
+    test("should handle posts with series", async () => {
+      const postWithSeries = createBlogPost({ series: "test-series" });
+      const mockResponse = { data: { id: 123, url: "https://dev.to/test" } };
+
+      (client as any).client.post.mockResolvedValue(mockResponse);
+
+      await client.publishPost(postWithSeries);
+
+      expect((client as any).client.post).toHaveBeenCalledWith("/articles", {
+        article: expect.objectContaining({ series: "test-series" }),
+      });
+    });
+
+    test("should handle posts without cover image", async () => {
+      const postWithoutCover = createBlogPost({ cover_image: undefined });
+      const mockResponse = { data: { id: 123, url: "https://dev.to/test" } };
+
+      (client as any).client.post.mockResolvedValue(mockResponse);
+
+      await client.publishPost(postWithoutCover);
+
+      expect((client as any).client.post).toHaveBeenCalledWith("/articles", {
+        article: expect.objectContaining({
+          cover_image: undefined,
+          main_image: undefined,
+        }),
+      });
+    });
+
+    test("should handle empty tags array", async () => {
+      const postWithoutTags = createBlogPost({ tags: [] });
+      const mockResponse = { data: { id: 123, url: "https://dev.to/test" } };
+
+      (client as any).client.post.mockResolvedValue(mockResponse);
+
+      await client.publishPost(postWithoutTags);
+
+      expect((client as any).client.post).toHaveBeenCalledWith("/articles", {
+        article: expect.objectContaining({ tags: [] }),
+      });
+    });
+
+    test("should slice tags to maximum 4", async () => {
+      const postWithManyTags = createBlogPost({
+        tags: ["tag1", "tag2", "tag3", "tag4", "tag5", "tag6"],
+      });
+      const mockResponse = { data: { id: 123, url: "https://dev.to/test" } };
+
+      (client as any).client.post.mockResolvedValue(mockResponse);
+
+      await client.publishPost(postWithManyTags);
+
+      expect((client as any).client.post).toHaveBeenCalledWith("/articles", {
+        article: expect.objectContaining({
+          tags: ["tag1", "tag2", "tag3", "tag4"],
+        }),
+      });
+    });
+
+    test("should handle posts with less than 4 tags", async () => {
+      const postWith2Tags = createBlogPost({ tags: ["tag1", "tag2"] });
+      const mockResponse = { data: { id: 123, url: "https://dev.to/test" } };
+
+      (client as any).client.post.mockResolvedValue(mockResponse);
+
+      await client.publishPost(postWith2Tags);
+
+      expect((client as any).client.post).toHaveBeenCalledWith("/articles", {
+        article: expect.objectContaining({ tags: ["tag1", "tag2"] }),
+      });
+    });
+
+    test("should handle unexpected API response structure", async () => {
+      const blogPost = createBlogPost();
+      const mockResponse = { data: { url: "https://dev.to/test" } }; // Missing id
+
+      (client as any).client.post.mockResolvedValue(mockResponse);
+
+      const result = await client.publishPost(blogPost);
+
+      expect(result).toEqual({ id: undefined, url: "https://dev.to/test" });
+    });
+
+    test("should handle cover_image without main_image", async () => {
+      const blogPost = {
         title: "Test Post",
-        content: "Content",
-        tags: ["tag1", "tag2", "tag3", "tag4", "tag5"],
+        content: "Test content",
+        tags: ["test"],
         published: true,
+        cover_image: "test.jpg",
+        // No main_image
       };
 
-      mockAxiosInstance.post.mockResolvedValueOnce({
-        data: { id: 123, url: "https://dev.to/test" },
-      });
+      const mockResponse = { data: { id: 123, url: "https://dev.to/test" } };
+
+      (client as any).client.post.mockResolvedValue(mockResponse);
 
       await client.publishPost(blogPost);
 
-      const articleData = mockAxiosInstance.post.mock.calls[0][1].article;
-      expect(articleData.tags).toHaveLength(4);
-      expect(articleData.tags).toEqual(["tag1", "tag2", "tag3", "tag4"]);
-    });
-
-    it("should handle unpublished posts", async () => {
-      const blogPost: BlogPost = {
-        title: "Draft Post",
-        content: "Content",
-        tags: [],
-        published: false,
-      };
-
-      mockAxiosInstance.post.mockResolvedValueOnce({
-        data: { id: 123, url: "https://dev.to/test" },
+      expect((client as any).client.post).toHaveBeenCalledWith("/articles", {
+        article: expect.objectContaining({
+          cover_image: "test.jpg",
+          main_image: "test.jpg",
+        }),
       });
-
-      await client.publishPost(blogPost);
-
-      const articleData = mockAxiosInstance.post.mock.calls[0][1].article;
-      expect(articleData.published).toBe(false);
     });
 
-    it("should handle API error", async () => {
-      const blogPost: BlogPost = {
-        title: "Test Post",
-        content: "Content",
-        tags: [],
-        published: true,
-      };
+    test("should handle empty API response", async () => {
+      const blogPost = createBlogPost();
+      const mockResponse = { data: {} }; // Empty response
 
-      const error = {
-        isAxiosError: true,
+      (client as any).client.post.mockResolvedValue(mockResponse);
+
+      const result = await client.publishPost(blogPost);
+
+      expect(result).toEqual({});
+    });
+  });
+
+  // 3. ERROR HANDLING TESTS
+  describe("Error Handling - Complete Coverage", () => {
+    test("should handle errors with unexpected response structure", async () => {
+      const errorResponse = {
         response: {
           data: {
-            error: "Validation failed",
+            message: "Custom error message",
+            details: "Additional details",
           },
         },
+        isAxiosError: true,
       };
 
-      mockedAxios.isAxiosError.mockReturnValue(true);
-      mockAxiosInstance.post.mockRejectedValueOnce(error);
+      (client as any).client.post.mockRejectedValue(errorResponse);
 
-      await expect(client.publishPost(blogPost)).rejects.toThrow(
-        "Dev.to API error: Validation failed",
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
+        "Dev.to API error: Custom error message",
+      );
+    });
+
+    test("should handle errors with no response data", async () => {
+      const errorResponse = {
+        message: "Network timeout",
+        isAxiosError: true,
+      };
+
+      (client as any).client.post.mockRejectedValue(errorResponse);
+
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
+        "Dev.to API error: Network timeout",
+      );
+    });
+
+    test("should handle errors with empty response", async () => {
+      const errorResponse = {
+        response: {},
+        isAxiosError: true,
+        message: "Empty response error",
+      };
+
+      (client as any).client.post.mockRejectedValue(errorResponse);
+
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
+        "Dev.to API error: Empty response error",
+      );
+    });
+
+    test("should handle axios errors without response", async () => {
+      const errorResponse = {
+        message: "Network error",
+        isAxiosError: true,
+      };
+
+      (client as any).client.post.mockRejectedValue(errorResponse);
+
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
+        "Dev.to API error: Network error",
+      );
+    });
+
+    test("should handle errors with specific error structure", async () => {
+      const errorResponse = {
+        response: {
+          data: { error: "Specific error", details: "Additional details" },
+        },
+        isAxiosError: true,
+      };
+
+      (client as any).client.post.mockRejectedValue(errorResponse);
+
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
+        "Dev.to API error: Specific error",
       );
     });
   });
 
-  describe("getPost", () => {
-    it("should get a post by ID", async () => {
-      const mockPost = {
-        id: 123,
-        title: "Test Post",
-        url: "https://dev.to/test",
+  // 4. GET POST TESTS
+  describe("getPost - Complete Coverage", () => {
+    test("should fetch post successfully", async () => {
+      const mockResponse = {
+        data: { id: 123, title: "Test Post", url: "https://dev.to/test" },
       };
-      mockAxiosInstance.get.mockResolvedValueOnce({
-        data: mockPost,
-      });
+
+      (client as any).client.get.mockResolvedValue(mockResponse);
 
       const result = await client.getPost(123);
 
-      expect(result).toEqual(mockPost);
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith("/articles/123");
+      expect(result).toEqual(mockResponse.data);
+      expect((client as any).client.get).toHaveBeenCalledWith("/articles/123");
     });
 
-    it("should handle API error", async () => {
-      const error = {
+    test("should handle get post errors", async () => {
+      const errorResponse = {
+        response: { data: { error: "Get error" } },
         isAxiosError: true,
-        response: {
-          data: {
-            error: "Article not found",
-          },
-        },
       };
+      (client as any).client.get.mockRejectedValue(errorResponse);
 
-      mockedAxios.isAxiosError.mockReturnValue(true);
-      mockAxiosInstance.get.mockRejectedValueOnce(error);
-
-      await expect(client.getPost(999)).rejects.toThrow(
-        "Dev.to API error: Article not found",
+      await expect(client.getPost(123)).rejects.toThrow(
+        "Dev.to API error: Get error",
       );
+    });
+
+    test("should handle non-axios error in getPost", async () => {
+      const error = new Error("Non-axios error");
+      (client as any).client.get.mockRejectedValue(error);
+
+      await expect(client.getPost(123)).rejects.toThrow("Non-axios error");
     });
   });
 
-  describe("getUserPosts", () => {
-    it("should get user posts", async () => {
-      const mockPosts = [
-        { id: 1, title: "Post 1" },
-        { id: 2, title: "Post 2" },
-      ];
+  // 5. UPDATE POST TESTS
+  describe("updatePost - Complete Coverage", () => {
+    test("should update post successfully", async () => {
+      const blogPost = createBlogPost({ title: "Updated Post" });
+      const mockResponse = { data: { id: 123, url: "https://dev.to/updated" } };
 
-      mockAxiosInstance.get.mockResolvedValueOnce({
-        data: mockPosts,
+      (client as any).client.put.mockResolvedValue(mockResponse);
+
+      const result = await client.updatePost(123, blogPost);
+
+      expect(result).toEqual({ id: 123, url: "https://dev.to/updated" });
+      expect((client as any).client.put).toHaveBeenCalledWith("/articles/123", {
+        article: expect.objectContaining({ title: "Updated Post" }),
       });
-
-      const result = await client.getUserPosts("testuser");
-
-      expect(result).toEqual(mockPosts);
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith(
-        "/articles?username=testuser",
-      );
     });
-  });
 
-  describe("updatePost", () => {
-    it("should update a post successfully", async () => {
+    test("should handle updatePost with all possible fields", async () => {
       const blogPost: BlogPost = {
         title: "Updated Post",
         content: "Updated content",
         tags: ["updated"],
-        published: true,
+        published: false,
+        description: "Updated description",
+        cover_image: "updated.jpg",
+        canonical_url: "https://example.com/updated",
+        series: "updated-series",
       };
 
-      mockAxiosInstance.put.mockResolvedValueOnce({
-        data: {
-          id: 123,
-          url: "https://dev.to/user/updated-post-123",
-        },
-      });
+      const mockResponse = { data: { id: 123, url: "https://dev.to/updated" } };
+
+      (client as any).client.put.mockResolvedValue(mockResponse);
 
       const result = await client.updatePost(123, blogPost);
 
-      expect(result.id).toBe(123);
-      expect(result.url).toBe("https://dev.to/user/updated-post-123");
-      expect(mockAxiosInstance.put).toHaveBeenCalledWith("/articles/123", {
-        article: {
-          title: "Updated Post",
-          body_markdown: "Updated content",
-          published: true,
-          tags: ["updated"],
-          series: undefined,
-          canonical_url: undefined,
-          description: undefined,
-          cover_image: undefined,
-          main_image: undefined,
-        },
+      expect(result).toEqual({ id: 123, url: "https://dev.to/updated" });
+      expect((client as any).client.put).toHaveBeenCalledWith("/articles/123", {
+        article: expect.objectContaining({
+          published: false,
+          series: "updated-series",
+        }),
       });
+    });
+
+    test("should handle updatePost errors", async () => {
+      const errorResponse = {
+        message: "Update failed",
+        isAxiosError: true,
+      };
+
+      (client as any).client.put.mockRejectedValue(errorResponse);
+
+      await expect(client.updatePost(123, createBlogPost())).rejects.toThrow(
+        "Dev.to API error: Update failed",
+      );
     });
   });
 
-  describe("getMe", () => {
-    it("should get current user info", async () => {
-      const mockUser = { id: 1, username: "testuser", name: "Test User" };
-      mockAxiosInstance.get.mockResolvedValueOnce({
-        data: mockUser,
-      });
+  // 6. GET USER POSTS TESTS
+  describe("getUserPosts - Complete Coverage", () => {
+    test("should fetch user posts successfully", async () => {
+      const mockResponse = { data: [{ id: 1, title: "Post 1" }] };
+
+      (client as any).client.get.mockResolvedValue(mockResponse);
+
+      const result = await client.getUserPosts("testuser");
+
+      expect(result).toEqual(mockResponse.data);
+      expect((client as any).client.get).toHaveBeenCalledWith(
+        "/articles?username=testuser",
+      );
+    });
+
+    test("should handle empty posts array", async () => {
+      const mockResponse = { data: [] };
+
+      (client as any).client.get.mockResolvedValue(mockResponse);
+
+      const result = await client.getUserPosts("testuser");
+
+      expect(result).toEqual([]);
+    });
+
+    test("should handle different usernames", async () => {
+      const mockResponse = { data: [{ id: 1, title: "Post 1" }] };
+
+      (client as any).client.get.mockResolvedValue(mockResponse);
+
+      const result = await client.getUserPosts("differentuser");
+
+      expect(result).toEqual(mockResponse.data);
+      expect((client as any).client.get).toHaveBeenCalledWith(
+        "/articles?username=differentuser",
+      );
+    });
+
+    test("should handle getUserPosts errors", async () => {
+      const errorResponse = {
+        response: { data: null },
+        isAxiosError: true,
+        message: "Empty data error",
+      };
+
+      (client as any).client.get.mockRejectedValue(errorResponse);
+
+      await expect(client.getUserPosts("testuser")).rejects.toThrow(
+        "Dev.to API error: Empty data error",
+      );
+    });
+  });
+
+  // 7. GET ME TESTS
+  describe("getMe - Complete Coverage", () => {
+    test("should fetch user info successfully", async () => {
+      const mockResponse = {
+        data: { id: 1, name: "Test User", username: "testuser" },
+      };
+
+      (client as any).client.get.mockResolvedValue(mockResponse);
 
       const result = await client.getMe();
 
-      expect(result).toEqual(mockUser);
-      expect(mockAxiosInstance.get).toHaveBeenCalledWith("/users/me");
+      expect(result).toEqual(mockResponse.data);
+      expect((client as any).client.get).toHaveBeenCalledWith("/users/me");
+    });
+
+    test("should handle getMe errors", async () => {
+      const errorResponse = {
+        response: { data: { error: "Custom error" } },
+        isAxiosError: true,
+      };
+
+      (client as any).client.get.mockRejectedValue(errorResponse);
+
+      await expect(client.getMe()).rejects.toThrow(
+        "Dev.to API error: Custom error",
+      );
     });
   });
 
-  // Add to devto.test.ts
-  describe("DevtoClient - Edge Cases", () => {
-    it("should handle Axios errors without response data", async () => {
-      const client = new DevtoClient("test-api-key");
-      const blogPost: BlogPost = {
-        title: "Test Post",
-        content: "Content",
-        tags: [],
-        published: true,
-      };
-
-      const error = {
+  // 8. EDGE CASES AND ERROR SCENARIOS
+  describe("Edge Cases and Error Scenarios", () => {
+    test("should handle non-standard error formats", async () => {
+      const errorResponse = {
+        response: {
+          data: { error_message: "Non-standard error format" },
+        },
         isAxiosError: true,
-        message: "Network error",
+        message: "Fallback error message",
       };
 
-      mockedAxios.isAxiosError.mockReturnValue(true);
-      mockAxiosInstance.post.mockRejectedValueOnce(error);
+      (client as any).client.post.mockRejectedValue(errorResponse);
 
-      await expect(client.publishPost(blogPost)).rejects.toThrow(
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
+        "Dev.to API error: Fallback error message",
+      );
+    });
+
+    test("should handle regular Error objects (no wrapping)", async () => {
+      const error = new Error("Generic error");
+      (client as any).client.post.mockRejectedValue(error);
+
+      // Regular Error objects are NOT wrapped with "Dev.to API error: " prefix
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
+        "Generic error",
+      );
+    });
+
+    test("should handle errors with only message property", async () => {
+      const errorResponse = {
+        message: "Network error",
+        isAxiosError: true,
+      };
+
+      (client as any).client.post.mockRejectedValue(errorResponse);
+
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
         "Dev.to API error: Network error",
       );
     });
 
-    it("should handle Axios errors with empty response", async () => {
-      const client = new DevtoClient("test-api-key");
-      const blogPost: BlogPost = {
-        title: "Test Post",
-        content: "Content",
-        tags: [],
-        published: true,
-      };
-
-      const error = {
+    test("should handle axios errors with response data error", async () => {
+      const errorResponse = {
+        response: {
+          data: { error: "Specific API error" },
+        },
         isAxiosError: true,
-        response: {}, // Empty response
+        message: "Fallback message",
       };
 
-      mockedAxios.isAxiosError.mockReturnValue(true);
-      mockAxiosInstance.post.mockRejectedValueOnce(error);
+      (client as any).client.post.mockRejectedValue(errorResponse);
 
-      await expect(client.publishPost(blogPost)).rejects.toThrow(
-        "Dev.to API error: undefined",
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
+        "Dev.to API error: Specific API error",
       );
     });
-  });
-  it("should handle Axios errors with empty error response in publishPost", async () => {
-    const client = new DevtoClient("test-api-key");
-    const blogPost: BlogPost = {
-      title: "Test Post",
-      content: "Content",
-      tags: [],
-      published: true,
-    };
 
-    const error = {
-      isAxiosError: true,
-      response: {
-        data: {}, // Empty data object
-      },
-    };
+    test("should handle axios errors without response data", async () => {
+      const errorResponse = {
+        response: {},
+        isAxiosError: true,
+        message: "Response error",
+      };
 
-    mockedAxios.isAxiosError.mockReturnValue(true);
-    mockAxiosInstance.post.mockRejectedValueOnce(error);
+      (client as any).client.post.mockRejectedValue(errorResponse);
 
-    await expect(client.publishPost(blogPost)).rejects.toThrow(
-      "Dev.to API error: undefined",
-    );
-  });
-
-  it("should handle Axios errors with empty error response in getPost", async () => {
-    const client = new DevtoClient("test-api-key");
-    const error = {
-      isAxiosError: true,
-      response: {
-        data: {}, // Empty data object
-      },
-    };
-
-    mockedAxios.isAxiosError.mockReturnValue(true);
-    mockAxiosInstance.get.mockRejectedValueOnce(error);
-
-    await expect(client.getPost(123)).rejects.toThrow(
-      "Dev.to API error: undefined",
-    );
-  });
-
-  it("should handle Axios errors with empty error response in getUserPosts", async () => {
-    const client = new DevtoClient("test-api-key");
-    const error = {
-      isAxiosError: true,
-      response: {
-        data: {}, // Empty data object
-      },
-    };
-
-    mockedAxios.isAxiosError.mockReturnValue(true);
-    mockAxiosInstance.get.mockRejectedValueOnce(error);
-
-    await expect(client.getUserPosts("testuser")).rejects.toThrow(
-      "Dev.to API error: undefined",
-    );
-  });
-
-  it("should handle Axios errors with empty error response in updatePost", async () => {
-    const client = new DevtoClient("test-api-key");
-    const blogPost: BlogPost = {
-      title: "Test Post",
-      content: "Content",
-      tags: [],
-      published: true,
-    };
-
-    const error = {
-      isAxiosError: true,
-      response: {
-        data: {}, // Empty data object
-      },
-    };
-
-    mockedAxios.isAxiosError.mockReturnValue(true);
-    mockAxiosInstance.put.mockRejectedValueOnce(error);
-
-    await expect(client.updatePost(123, blogPost)).rejects.toThrow(
-      "Dev.to API error: undefined",
-    );
-  });
-
-  it("should handle Axios errors with empty error response in getMe", async () => {
-    const client = new DevtoClient("test-api-key");
-    const error = {
-      isAxiosError: true,
-      response: {
-        data: {}, // Empty data object
-      },
-    };
-
-    mockedAxios.isAxiosError.mockReturnValue(true);
-    mockAxiosInstance.get.mockRejectedValueOnce(error);
-
-    await expect(client.getMe()).rejects.toThrow("Dev.to API error: undefined");
+      await expect(client.publishPost(createBlogPost())).rejects.toThrow(
+        "Dev.to API error: Response error",
+      );
+    });
   });
 });

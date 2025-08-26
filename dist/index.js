@@ -12,9 +12,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.DevtoClient = void 0;
 const axios_1 = __importDefault(__nccwpck_require__(8757));
+const logger_1 = __nccwpck_require__(885);
 class DevtoClient {
     constructor(apiKey) {
-        this.apiKey = apiKey;
+        logger_1.logger.debug("Initializing Dev.to client");
         this.client = axios_1.default.create({
             baseURL: "https://dev.to/api",
             headers: {
@@ -22,9 +23,13 @@ class DevtoClient {
                 "Content-Type": "application/json",
             },
         });
+        logger_1.logger.debug("Dev.to client initialized");
     }
     async publishPost(blogPost) {
         try {
+            logger_1.logger.info(`Publishing to Dev.to: ${blogPost.title}`);
+            logger_1.logger.debug(`Post content length: ${blogPost.content.length} characters`);
+            logger_1.logger.debug(`Tags: ${blogPost.tags.join(", ")}`);
             const devtoPost = {
                 title: blogPost.title,
                 body_markdown: blogPost.content,
@@ -36,9 +41,12 @@ class DevtoClient {
                 cover_image: blogPost.cover_image,
                 main_image: blogPost.cover_image,
             };
+            logger_1.logger.debug("Sending request to Dev.to API");
             const response = await this.client.post("/articles", {
                 article: devtoPost,
             });
+            logger_1.logger.info(`Successfully published to Dev.to: ${response.data.url}`);
+            logger_1.logger.debug(`Post ID: ${response.data.id}`);
             return {
                 id: response.data.id,
                 url: response.data.url,
@@ -49,37 +57,54 @@ class DevtoClient {
                 const errorMessage = error.response?.data?.error ||
                     error.response?.data?.message ||
                     error.message;
+                logger_1.logger.error(`Dev.to API error: ${errorMessage}`);
+                if (error.response?.data) {
+                    logger_1.logger.debug(`Dev.to API response: ${JSON.stringify(error.response.data)}`);
+                }
                 throw new Error(`Dev.to API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error publishing to Dev.to: ${error}`);
             throw error;
         }
     }
     async getPost(postId) {
         try {
+            logger_1.logger.debug(`Fetching Dev.to post: ${postId}`);
             const response = await this.client.get(`/articles/${postId}`);
+            logger_1.logger.debug(`Retrieved Dev.to post: ${response.data.title}`);
             return response.data;
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Dev.to API error: ${error.response?.data?.error || error.message}`);
+                const errorMessage = error.response?.data?.error || error.message;
+                logger_1.logger.error(`Error fetching Dev.to post: ${errorMessage}`);
+                throw new Error(`Dev.to API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error fetching Dev.to post: ${error}`);
             throw error;
         }
     }
     async getUserPosts(username) {
         try {
+            logger_1.logger.debug(`Fetching Dev.to posts for user: ${username}`);
             const response = await this.client.get(`/articles?username=${username}`);
+            logger_1.logger.debug(`Retrieved ${response.data.length} posts for ${username}`);
             return response.data;
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Dev.to API error: ${error.response?.data?.error || error.message}`);
+                const errorMessage = error.response?.data?.error || error.message;
+                logger_1.logger.error(`Error fetching Dev.to user posts: ${errorMessage}`);
+                throw new Error(`Dev.to API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error fetching Dev.to user posts: ${error}`);
             throw error;
         }
     }
     async updatePost(postId, blogPost) {
         try {
+            logger_1.logger.info(`Updating Dev.to post: ${postId}`);
+            logger_1.logger.debug(`New title: ${blogPost.title}`);
             const devtoPost = {
                 title: blogPost.title,
                 body_markdown: blogPost.content,
@@ -94,6 +119,7 @@ class DevtoClient {
             const response = await this.client.put(`/articles/${postId}`, {
                 article: devtoPost,
             });
+            logger_1.logger.info(`Successfully updated Dev.to post: ${response.data.url}`);
             return {
                 id: response.data.id,
                 url: response.data.url,
@@ -101,20 +127,28 @@ class DevtoClient {
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Dev.to API error: ${error.response?.data?.error || error.message}`);
+                const errorMessage = error.response?.data?.error || error.message;
+                logger_1.logger.error(`Error updating Dev.to post: ${errorMessage}`);
+                throw new Error(`Dev.to API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error updating Dev.to post: ${error}`);
             throw error;
         }
     }
     async getMe() {
         try {
+            logger_1.logger.debug("Fetching Dev.to user info");
             const response = await this.client.get("/users/me");
+            logger_1.logger.debug(`Retrieved Dev.to user: ${response.data.name}`);
             return response.data;
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Dev.to API error: ${error.response?.data?.error || error.message}`);
+                const errorMessage = error.response?.data?.error || error.message;
+                logger_1.logger.error(`Error fetching Dev.to user info: ${errorMessage}`);
+                throw new Error(`Dev.to API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error fetching Dev.to user info: ${error}`);
             throw error;
         }
     }
@@ -134,39 +168,48 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.HashnodeClient = void 0;
+// hashnode.ts
 const axios_1 = __importDefault(__nccwpck_require__(8757));
+const logger_1 = __nccwpck_require__(885);
 class HashnodeClient {
     constructor(token) {
-        this.token = token;
+        logger_1.logger.debug("Initializing Hashnode client");
         this.client = axios_1.default.create({
             baseURL: "https://gql.hashnode.com",
             headers: {
-                Authorization: this.token,
+                Authorization: token,
                 "Content-Type": "application/json",
             },
         });
+        logger_1.logger.debug("Hashnode client initialized");
     }
     generateSlug(title) {
-        return title
+        logger_1.logger.debug(`Generating slug from title: ${title}`);
+        const slug = title
             .toLowerCase()
             .replace(/[^a-z0-9 -]/g, "")
             .replace(/\s+/g, "-")
             .replace(/-+/g, "-")
             .trim();
+        logger_1.logger.debug(`Generated slug: ${slug}`);
+        return slug;
     }
     // Convert BlogPost to HashnodePost format
     convertToHashnodePost(blogPost, publicationId) {
+        logger_1.logger.debug("Converting blog post to Hashnode format");
         const slug = blogPost.slug || this.generateSlug(blogPost.title);
         // Handle publishedAt date conversion
         let publishedAt;
         if (blogPost.publishedAt) {
             publishedAt = new Date(blogPost.publishedAt).toISOString();
+            logger_1.logger.debug(`Using publishedAt: ${publishedAt}`);
         }
         else if (blogPost.date) {
             // Some Markdown processors might use 'date' instead of 'publishedAt'
             publishedAt = new Date(blogPost.date).toISOString();
+            logger_1.logger.debug(`Using date as publishedAt: ${publishedAt}`);
         }
-        return {
+        const hashnodePost = {
             title: blogPost.title,
             contentMarkdown: blogPost.content,
             tags: blogPost.tags.map((tag) => ({ name: tag })),
@@ -178,12 +221,17 @@ class HashnodeClient {
             disableComments: false,
             publishedAt,
         };
+        logger_1.logger.debug(`Converted to Hashnode post format with ${blogPost.tags.length} tags`);
+        return hashnodePost;
     }
     async publishPost(blogPost, publicationId) {
         try {
+            logger_1.logger.info(`Publishing to Hashnode: ${blogPost.title}`);
             if (!publicationId) {
+                logger_1.logger.error("Hashnode publication ID not provided");
                 throw new Error("Hashnode publication ID not provided");
             }
+            logger_1.logger.debug(`Using publication ID: ${publicationId}`);
             const hashnodePost = this.convertToHashnodePost(blogPost, publicationId);
             const mutation = `
         mutation PublishPost($input: PublishPostInput!) {
@@ -215,7 +263,7 @@ class HashnodeClient {
                     publicationId: hashnodePost.publicationId,
                     originalArticleURL: hashnodePost.originalArticleURL,
                     disableComments: hashnodePost.disableComments,
-                    publishedAt: hashnodePost.publishedAt, // Add this line
+                    publishedAt: hashnodePost.publishedAt,
                     metaTags: {
                         title: hashnodePost.title,
                         description: hashnodePost.subtitle,
@@ -223,14 +271,19 @@ class HashnodeClient {
                     },
                 },
             };
+            logger_1.logger.debug("Sending GraphQL mutation to Hashnode");
             const response = await this.client.post("", {
                 query: mutation,
                 variables,
             });
             if (response.data.errors) {
-                throw new Error(`Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+                const errorMessage = `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`;
+                logger_1.logger.error(errorMessage);
+                throw new Error(errorMessage);
             }
             const post = response.data.data.publishPost.post;
+            logger_1.logger.info(`Successfully published to Hashnode: ${post.url}`);
+            logger_1.logger.debug(`Post ID: ${post.id}, Slug: ${post.slug}`);
             return {
                 id: post.id,
                 url: post.url,
@@ -241,55 +294,68 @@ class HashnodeClient {
                 const errorMessage = error.response?.data?.errors?.[0]?.message ||
                     error.response?.data?.message ||
                     error.message;
+                logger_1.logger.error(`Hashnode API error: ${errorMessage}`);
+                if (error.response?.data?.errors) {
+                    logger_1.logger.debug(`Hashnode GraphQL errors: ${JSON.stringify(error.response.data.errors)}`);
+                }
                 throw new Error(`Hashnode API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error publishing to Hashnode: ${error}`);
             throw error;
         }
     }
     async getPost(slug) {
         try {
+            logger_1.logger.debug(`Fetching Hashnode post: ${slug}`);
             const query = `
-              query GetPost($slug: String!) {
-                post(slug: $slug) {
-                  id
-                  title
-                  slug
-                  url
-                  contentMarkdown
-                  tags {
-                    name
-                    slug
-                  }
-                  coverImage {
-                    url
-                  }
-                  subtitle
-                  dateAdded
-                  author {
-                    username
-                    name
-                  }
-                }
-              }
-            `;
+        query GetPost($slug: String!) {
+          post(slug: $slug) {
+            id
+            title
+            slug
+            url
+            contentMarkdown
+            tags {
+              name
+              slug
+            }
+            coverImage {
+              url
+            }
+            subtitle
+            dateAdded
+            author {
+              username
+              name
+            }
+          }
+        }
+      `;
             const response = await this.client.post("", {
                 query,
                 variables: { slug },
             });
             if (response.data.errors) {
-                throw new Error(`Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+                const errorMessage = `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`;
+                logger_1.logger.error(errorMessage);
+                throw new Error(errorMessage);
             }
+            logger_1.logger.debug(`Retrieved Hashnode post: ${response.data.data.post?.title}`);
             return response.data.data.post;
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`);
+                const errorMessage = error.response?.data?.errors?.[0]?.message || error.message;
+                logger_1.logger.error(`Error fetching Hashnode post: ${errorMessage}`);
+                throw new Error(`Hashnode API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error fetching Hashnode post: ${error}`);
             throw error;
         }
     }
     async getMe() {
         try {
+            logger_1.logger.debug("Fetching Hashnode user info");
             const query = `
         query Me {
           me {
@@ -311,19 +377,28 @@ class HashnodeClient {
                 query,
             });
             if (response.data.errors) {
-                throw new Error(`Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+                const errorMessage = `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`;
+                logger_1.logger.error(errorMessage);
+                throw new Error(errorMessage);
             }
-            return response.data.data.me;
+            const userData = response.data.data.me;
+            logger_1.logger.debug(`Retrieved Hashnode user: ${userData.username}`);
+            logger_1.logger.debug(`User has ${userData.publications?.length || 0} publications`);
+            return userData;
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`);
+                const errorMessage = error.response?.data?.errors?.[0]?.message || error.message;
+                logger_1.logger.error(`Error fetching Hashnode user info: ${errorMessage}`);
+                throw new Error(`Hashnode API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error fetching Hashnode user info: ${error}`);
             throw error;
         }
     }
     async getUserPosts(username) {
         try {
+            logger_1.logger.debug(`Fetching Hashnode posts for user: ${username}`);
             const query = `
         query GetUserPosts($username: String!) {
           user(username: $username) {
@@ -345,14 +420,21 @@ class HashnodeClient {
                 variables: { username },
             });
             if (response.data.errors) {
-                throw new Error(`Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`);
+                const errorMessage = `Hashnode GraphQL errors: ${JSON.stringify(response.data.errors)}`;
+                logger_1.logger.error(errorMessage);
+                throw new Error(errorMessage);
             }
-            return response.data.data.user.posts;
+            const posts = response.data.data.user.posts;
+            logger_1.logger.debug(`Retrieved ${posts.length} posts for ${username}`);
+            return posts;
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Hashnode API error: ${error.response?.data?.errors?.[0]?.message || error.message}`);
+                const errorMessage = error.response?.data?.errors?.[0]?.message || error.message;
+                logger_1.logger.error(`Error fetching Hashnode user posts: ${errorMessage}`);
+                throw new Error(`Hashnode API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error fetching Hashnode user posts: ${error}`);
             throw error;
         }
     }
@@ -373,9 +455,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MediumClient = void 0;
 const axios_1 = __importDefault(__nccwpck_require__(8757));
+const logger_1 = __nccwpck_require__(885);
 class MediumClient {
     constructor(token) {
-        this.token = token;
+        logger_1.logger.debug("Initializing Medium client");
         this.client = axios_1.default.create({
             baseURL: "https://api.medium.com/v1",
             headers: {
@@ -384,22 +467,28 @@ class MediumClient {
                 Accept: "application/json",
             },
         });
+        logger_1.logger.debug("Medium client initialized");
     }
     async getUserId() {
         if (this.userId) {
+            logger_1.logger.debug(`Using cached user ID: ${this.userId}`);
             return this.userId;
         }
         try {
+            logger_1.logger.debug("Fetching Medium user ID");
             const response = await this.client.get("/me");
             this.userId = response.data.data.id;
+            logger_1.logger.debug(`Retrieved Medium user ID: ${this.userId}`);
             return this.userId;
         }
         catch (error) {
+            logger_1.logger.error(`Failed to get Medium user info: ${error}`);
             throw new Error(`Failed to get Medium user info: ${error}`);
         }
     }
     async publishPost(blogPost) {
         try {
+            logger_1.logger.info(`Publishing to Medium: ${blogPost.title}`);
             const userId = await this.getUserId();
             const mediumPost = {
                 title: blogPost.title,
@@ -410,7 +499,11 @@ class MediumClient {
                 canonicalUrl: blogPost.canonical_url,
                 notifyFollowers: true,
             };
+            logger_1.logger.debug(`Publishing as ${mediumPost.publishStatus}`);
+            logger_1.logger.debug(`Tags: ${mediumPost.tags?.join(", ") || "none"}`);
             const response = await this.client.post(`/users/${userId}/posts`, mediumPost);
+            logger_1.logger.info(`Successfully published to Medium: ${response.data.data.url}`);
+            logger_1.logger.debug(`Post ID: ${response.data.data.id}`);
             return {
                 id: response.data.data.id,
                 url: response.data.data.url,
@@ -418,33 +511,49 @@ class MediumClient {
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Medium API error: ${error.response?.data?.errors?.[0]?.message || error.message}`);
+                const errorMessage = error.response?.data?.errors?.[0]?.message || error.message;
+                logger_1.logger.error(`Medium API error: ${errorMessage}`);
+                if (error.response?.data?.errors) {
+                    logger_1.logger.debug(`Medium API errors: ${JSON.stringify(error.response.data.errors)}`);
+                }
+                throw new Error(`Medium API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error publishing to Medium: ${error}`);
             throw error;
         }
     }
     async getPost(postId) {
         try {
+            logger_1.logger.debug(`Fetching Medium post: ${postId}`);
             const response = await this.client.get(`/posts/${postId}`);
+            logger_1.logger.debug(`Retrieved Medium post: ${response.data.data.title}`);
             return response.data.data;
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Medium API error: ${error.response?.data?.errors?.[0]?.message || error.message}`);
+                const errorMessage = error.response?.data?.errors?.[0]?.message || error.message;
+                logger_1.logger.error(`Error fetching Medium post: ${errorMessage}`);
+                throw new Error(`Medium API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error fetching Medium post: ${error}`);
             throw error;
         }
     }
     async getUserPosts() {
         try {
+            logger_1.logger.debug("Fetching Medium user posts");
             const userId = await this.getUserId();
             const response = await this.client.get(`/users/${userId}/posts`);
+            logger_1.logger.debug(`Retrieved ${response.data.data.length} Medium posts`);
             return response.data.data;
         }
         catch (error) {
             if (axios_1.default.isAxiosError(error)) {
-                throw new Error(`Medium API error: ${error.response?.data?.errors?.[0]?.message || error.message}`);
+                const errorMessage = error.response?.data?.errors?.[0]?.message || error.message;
+                logger_1.logger.error(`Error fetching Medium user posts: ${errorMessage}`);
+                throw new Error(`Medium API error: ${errorMessage}`);
             }
+            logger_1.logger.error(`Unexpected error fetching Medium user posts: ${error}`);
             throw error;
         }
     }
@@ -494,41 +603,71 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.run = run;
+// main.ts
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
 const publisher_1 = __nccwpck_require__(782);
+const logger_1 = __nccwpck_require__(885);
 async function run() {
     try {
+        logger_1.logger.info("Starting blog publisher action");
+        const debuggingEnabled = process.env.DEBUGGING_ENABLED === "true" ||
+            core.getBooleanInput("debugging_enabled") ||
+            process.env.ACTIONS_RUNNER_DEBUG === "true";
+        if (debuggingEnabled) {
+            logger_1.logger.setLevel(logger_1.LogLevel.DEBUG);
+            logger_1.logger.debug("Debug logging enabled");
+        }
         const config = {
-            mediumToken: core.getInput("medium-token"),
-            devtoToken: core.getInput("devto-token"),
-            hashnodeToken: core.getInput("hashnode-token"),
-            hashnodePublicationId: core.getInput("hashnode-publication-id"),
-            mediumPath: core.getInput("medium-path") || "posts/medium",
-            devtoPath: core.getInput("devto-path") || "posts/devto",
-            hashnodePath: core.getInput("hashnode-path") || "posts/hashnode",
-            useCommitMessage: core.getBooleanInput("use-commit-message"),
-            dryRun: core.getBooleanInput("dry-run"),
-            postsDirectory: core.getInput("posts-directory") || ".",
-            githubToken: core.getInput("github-token"),
+            mediumToken: core.getInput("medium_token"),
+            devtoToken: core.getInput("devto_token"),
+            hashnodeToken: core.getInput("hashnode_token"),
+            hashnodePublicationId: core.getInput("hashnode_publication_id"),
+            mediumPath: core.getInput("medium_path") || "posts/medium",
+            devtoPath: core.getInput("devto_path") || "posts/devto",
+            hashnodePath: core.getInput("hashnode_path") || "posts/hashnode",
+            useCommitMessage: core.getBooleanInput("use_commit_message"),
+            dryRun: core.getBooleanInput("dry_run"),
+            postsDirectory: core.getInput("posts_directory") || ".",
+            githubToken: core.getInput("github_token"),
+            updateAlreadyPublished: core.getBooleanInput("update_already_published") || true,
+            debuggingEnabled,
         };
+        logger_1.logger.debug("Configuration loaded", {
+            hasMediumToken: !!config.mediumToken,
+            hasDevtoToken: !!config.devtoToken,
+            hasHashnodeToken: !!config.hashnodeToken,
+            hasHashnodePublicationId: !!config.hashnodePublicationId,
+            updateAlreadyPublished: config.updateAlreadyPublished,
+            dryRun: config.dryRun,
+        });
         const publisher = new publisher_1.BlogsPublisher(config);
         // Get changed files from GitHub context
         const context = github.context;
+        logger_1.logger.info(`GitHub context event: ${context.eventName}`);
         const changedFiles = await publisher.getChangedFiles(context);
-        core.info(`Found ${changedFiles.length} changed files`);
+        logger_1.logger.info(`Found ${changedFiles.length} changed markdown files`);
+        if (changedFiles.length === 0) {
+            logger_1.logger.info("No markdown files to process, exiting");
+            return;
+        }
+        logger_1.logger.debug(`Files to process: ${JSON.stringify(changedFiles)}`);
         const results = await publisher.publishBlogs(changedFiles, context);
         core.setOutput("published-posts", JSON.stringify(results.published));
         core.setOutput("failed-posts", JSON.stringify(results.failed));
+        logger_1.logger.info(`Publishing completed: ${results.published.length} successful, ${results.failed.length} failed`);
         if (results.failed.length > 0) {
+            logger_1.logger.warn(`Failed to publish ${results.failed.length} posts`);
             core.setFailed(`Failed to publish ${results.failed.length} posts`);
         }
         else {
-            core.info(`Successfully published ${results.published.length} posts`);
+            logger_1.logger.info(`Successfully published ${results.published.length} posts`);
         }
     }
     catch (error) {
-        core.setFailed(error instanceof Error ? error.message : String(error));
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger_1.logger.error(`Action failed with error: ${errorMessage}`);
+        core.setFailed(errorMessage);
     }
 }
 // Only run if this file is being executed directly (not imported)
@@ -582,7 +721,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.BlogsPublisher = void 0;
-const core = __importStar(__nccwpck_require__(2186));
+// publisher.ts
 const github = __importStar(__nccwpck_require__(5438));
 const front_matter_1 = __importDefault(__nccwpck_require__(7646));
 const fs_1 = __nccwpck_require__(7147);
@@ -591,36 +730,72 @@ const devto_1 = __nccwpck_require__(8699);
 const hashnode_1 = __nccwpck_require__(4476);
 const medium_1 = __nccwpck_require__(1645);
 const markdown_processor_1 = __nccwpck_require__(6276);
+const logger_1 = __nccwpck_require__(885);
 class BlogsPublisher {
     constructor(config) {
         this.config = config;
+        this.publishedPosts = new Map();
+        logger_1.logger.info("Initializing BlogsPublisher");
         this.mediumClient = new medium_1.MediumClient(config.mediumToken);
         this.devtoClient = new devto_1.DevtoClient(config.devtoToken);
         this.hashnodeClient = new hashnode_1.HashnodeClient(config.hashnodeToken);
         this.markdownProcessor = new markdown_processor_1.MarkdownProcessor();
         if (config.githubToken) {
             process.env.GITHUB_TOKEN = config.githubToken;
+            logger_1.logger.debug("GITHUB_TOKEN environment variable set");
         }
+        logger_1.logger.debug("BlogsPublisher initialized successfully");
+    }
+    async checkIfAlreadyPublished(filePath, platform) {
+        if (!this.config.updateAlreadyPublished) {
+            // Check if this file was already published to the same platform
+            const publishedInfo = this.publishedPosts.get(filePath);
+            const isAlreadyPublished = publishedInfo !== undefined && publishedInfo.platform === platform;
+            if (isAlreadyPublished) {
+                logger_1.logger.debug(`File ${filePath} already published to ${platform}, skipping update`);
+            }
+            return isAlreadyPublished;
+        }
+        logger_1.logger.debug("Update already published is enabled, proceeding with publication");
+        return false;
     }
     async getChangedFiles(context) {
         try {
-            core.info(`Event name: ${context.eventName}`);
-            core.info(`Payload before: ${context.payload.before}`);
-            core.info(`Payload after: ${context.payload.after}`);
-            core.info(`Commits array: ${JSON.stringify(context.payload.commits)}`);
+            logger_1.logger.info(`Processing GitHub event: ${context.eventName}`);
+            logger_1.logger.debug(`Payload before: ${context.payload.before}`);
+            logger_1.logger.debug(`Payload after: ${context.payload.after}`);
+            if (context.payload.commits) {
+                logger_1.logger.debug(`Commits count: ${context.payload.commits.length}`);
+            }
             const changedFiles = new Set();
             // For push events (direct commits to branch)
             if (context.eventName === "push") {
-                core.info("Processing push event");
+                logger_1.logger.info("Processing push event");
                 if (!context.payload.before || !context.payload.after) {
-                    core.warning("Missing before/after commit SHAs in push event");
-                    return [];
+                    logger_1.logger.warn("Missing before/after commit SHAs in push event");
+                    // Fallback to commits array if available
+                    if (context.payload.commits &&
+                        Array.isArray(context.payload.commits)) {
+                        logger_1.logger.info("Processing using commits array fallback");
+                        for (const commit of context.payload.commits) {
+                            if (commit.added && Array.isArray(commit.added)) {
+                                logger_1.logger.debug(`Added files: ${commit.added.length}`);
+                                commit.added.forEach((file) => changedFiles.add(file));
+                            }
+                            if (commit.modified && Array.isArray(commit.modified)) {
+                                logger_1.logger.debug(`Modified files: ${commit.modified.length}`);
+                                commit.modified.forEach((file) => changedFiles.add(file));
+                            }
+                        }
+                    }
+                    return Array.from(changedFiles).filter((file) => file.endsWith(".md") || file.endsWith(".markdown"));
                 }
                 if (context.payload.before === context.payload.after) {
-                    core.info("No changes detected (before and after are the same)");
+                    logger_1.logger.info("No changes detected (before and after are the same)");
                     return [];
                 }
                 const octokit = github.getOctokit(this.config.githubToken);
+                logger_1.logger.debug("Octokit client initialized for push event");
                 // Get the comparison between the previous and current commit
                 const { data: comparison } = await octokit.rest.repos.compareCommits({
                     owner: context.repo.owner,
@@ -628,134 +803,322 @@ class BlogsPublisher {
                     base: context.payload.before,
                     head: context.payload.after,
                 });
-                core.info(`Comparison found ${comparison.files?.length || 0} files`);
+                logger_1.logger.info(`Comparison found ${comparison.files?.length || 0} files`);
                 comparison.files?.forEach((file) => {
-                    core.info(`Changed file: ${file.filename} (status: ${file.status})`);
+                    logger_1.logger.debug(`Changed file: ${file.filename} (status: ${file.status})`);
                     changedFiles.add(file.filename);
                 });
             }
             // For pull request events
             else if (context.eventName === "pull_request") {
-                core.info("Processing pull_request event");
+                logger_1.logger.info("Processing pull_request event");
                 const octokit = github.getOctokit(this.config.githubToken);
+                logger_1.logger.debug("Octokit client initialized for PR event");
                 const { data: files } = await octokit.rest.pulls.listFiles({
                     owner: context.repo.owner,
                     repo: context.repo.repo,
                     pull_number: context.payload.pull_request.number,
                 });
-                core.info(`PR found ${files.length} files`);
+                logger_1.logger.info(`PR found ${files.length} files`);
                 files.forEach((file) => {
-                    core.info(`Changed file: ${file.filename} (status: ${file.status})`);
+                    logger_1.logger.debug(`Changed file: ${file.filename} (status: ${file.status})`);
                     changedFiles.add(file.filename);
                 });
             }
             // Fallback: try to use commits array if available
             else if (context.payload.commits &&
                 Array.isArray(context.payload.commits)) {
-                core.info("Processing using commits array");
+                logger_1.logger.info("Processing using commits array fallback");
                 for (const commit of context.payload.commits) {
                     if (commit.added && Array.isArray(commit.added)) {
+                        logger_1.logger.debug(`Added files: ${commit.added.length}`);
                         commit.added.forEach((file) => changedFiles.add(file));
                     }
                     if (commit.modified && Array.isArray(commit.modified)) {
+                        logger_1.logger.debug(`Modified files: ${commit.modified.length}`);
                         commit.modified.forEach((file) => changedFiles.add(file));
                     }
                 }
             }
             else {
-                core.warning(`Unsupported event type: ${context.eventName}`);
+                logger_1.logger.warn(`Unsupported event type: ${context.eventName}`);
                 return [];
             }
             const markdownFiles = Array.from(changedFiles).filter((file) => file.endsWith(".md") || file.endsWith(".markdown"));
-            core.info(`Found ${markdownFiles.length} markdown files to process`);
-            core.info(`Files: ${JSON.stringify(markdownFiles)}`);
+            logger_1.logger.info(`Found ${markdownFiles.length} markdown files to process`);
+            logger_1.logger.debug(`Markdown files: ${JSON.stringify(markdownFiles)}`);
             return markdownFiles;
         }
         catch (error) {
-            core.error(`Error getting changed files: ${error instanceof Error ? error.message : String(error)}`);
+            logger_1.logger.error(`Error getting changed files: ${error instanceof Error ? error.message : String(error)}`);
             return [];
         }
     }
+    // async getChangedFiles(context: typeof github.context): Promise<string[]> {
+    //   try {
+    //     logger.info(`Processing GitHub event: ${context.eventName}`);
+    //     logger.debug(`Payload before: ${context.payload.before}`);
+    //     logger.debug(`Payload after: ${context.payload.after}`);
+    //
+    //     if (context.payload.commits) {
+    //       logger.debug(`Commits count: ${context.payload.commits.length}`);
+    //     }
+    //
+    //     const changedFiles = new Set<string>();
+    //
+    //     // For push events (direct commits to branch)
+    //     if (context.eventName === "push") {
+    //       logger.info("Processing push event");
+    //
+    //       if (!context.payload.before || !context.payload.after) {
+    //         logger.warn("Missing before/after commit SHAs in push event");
+    //         return [];
+    //       }
+    //
+    //       // previous code
+    //       // if (context.payload.before === context.payload.after) {
+    //       //   logger.info("No changes detected (before and after are the same)");
+    //       //   return [];
+    //       // }
+    //
+    //       if (context.payload.commits) {
+    //         for (const commit of context.payload.commits) {
+    //           if (commit.added)
+    //             files.push(
+    //               ...commit.added.filter(
+    //                 (f) => f.endsWith(".md") || f.endsWith(".markdown"),
+    //               ),
+    //             );
+    //           if (commit.modified)
+    //             files.push(
+    //               ...commit.modified.filter(
+    //                 (f) => f.endsWith(".md") || f.endsWith(".markdown"),
+    //               ),
+    //             );
+    //         }
+    //       }
+    //
+    //
+    //       const octokit = github.getOctokit(this.config.githubToken);
+    //       logger.debug("Octokit client initialized for push event");
+    //
+    //       // Get the comparison between the previous and current commit
+    //       const { data: comparison } = await octokit.rest.repos.compareCommits({
+    //         owner: context.repo.owner,
+    //         repo: context.repo.repo,
+    //         base: context.payload.before,
+    //         head: context.payload.after,
+    //       });
+    //
+    //       logger.info(`Comparison found ${comparison.files?.length || 0} files`);
+    //
+    //       comparison.files?.forEach((file) => {
+    //         logger.debug(
+    //           `Changed file: ${file.filename} (status: ${file.status})`,
+    //         );
+    //         changedFiles.add(file.filename);
+    //       });
+    //     }
+    //     // For pull request events
+    //     else if (context.eventName === "pull_request") {
+    //       logger.info("Processing pull_request event");
+    //       const octokit = github.getOctokit(this.config.githubToken);
+    //       logger.debug("Octokit client initialized for PR event");
+    //
+    //       const { data: files } = await octokit.rest.pulls.listFiles({
+    //         owner: context.repo.owner,
+    //         repo: context.repo.repo,
+    //         pull_number: context.payload.pull_request!.number,
+    //       });
+    //
+    //       logger.info(`PR found ${files.length} files`);
+    //
+    //       files.forEach((file) => {
+    //         logger.debug(
+    //           `Changed file: ${file.filename} (status: ${file.status})`,
+    //         );
+    //         changedFiles.add(file.filename);
+    //       });
+    //     }
+    //     // Fallback: try to use commits array if available
+    //     else if (
+    //       context.payload.commits &&
+    //       Array.isArray(context.payload.commits)
+    //     ) {
+    //       logger.info("Processing using commits array fallback");
+    //       for (const commit of context.payload.commits) {
+    //         if (commit.added && Array.isArray(commit.added)) {
+    //           logger.debug(`Added files: ${commit.added.length}`);
+    //           (commit.added as string[]).forEach((file) =>
+    //             changedFiles.add(file),
+    //           );
+    //         }
+    //         if (commit.modified && Array.isArray(commit.modified)) {
+    //           logger.debug(`Modified files: ${commit.modified.length}`);
+    //           (commit.modified as string[]).forEach((file) =>
+    //             changedFiles.add(file),
+    //           );
+    //         }
+    //       }
+    //     } else {
+    //       logger.warn(`Unsupported event type: ${context.eventName}`);
+    //       return [];
+    //     }
+    //
+    //     const markdownFiles = Array.from(changedFiles).filter(
+    //       (file) => file.endsWith(".md") || file.endsWith(".markdown"),
+    //     );
+    //
+    //     logger.info(`Found ${markdownFiles.length} markdown files to process`);
+    //     logger.debug(`Markdown files: ${JSON.stringify(markdownFiles)}`);
+    //
+    //     return markdownFiles;
+    //   } catch (error) {
+    //     logger.error(
+    //       `Error getting changed files: ${
+    //         error instanceof Error ? error.message : String(error)
+    //       }`,
+    //     );
+    //     return [];
+    //   }
+    // }
     determinePlatform(filePath, commitMessage) {
         const normalizedPath = filePath.toLowerCase();
+        logger_1.logger.debug(`Determining platform for file: ${filePath}`);
         // First check path-based determination (should take precedence)
         if (normalizedPath.includes(this.config.mediumPath.toLowerCase())) {
+            logger_1.logger.debug(`File ${filePath} determined as Medium (path-based)`);
             return "medium";
         }
         if (normalizedPath.includes(this.config.devtoPath.toLowerCase())) {
+            logger_1.logger.debug(`File ${filePath} determined as Dev.to (path-based)`);
             return "devto";
         }
         if (normalizedPath.includes(this.config.hashnodePath.toLowerCase())) {
+            logger_1.logger.debug(`File ${filePath} determined as Hashnode (path-based)`);
             return "hashnode";
         }
         // Then check commit message if no path match found
         if (this.config.useCommitMessage && commitMessage) {
+            logger_1.logger.debug(`Checking commit message for platform: ${commitMessage}`);
             const message = commitMessage.toLowerCase();
-            if (message.includes("medium"))
+            if (message.includes("medium")) {
+                logger_1.logger.debug(`File ${filePath} determined as Medium (commit-based)`);
                 return "medium";
-            if (message.includes("dev.to") || message.includes("devto"))
+            }
+            if (message.includes("dev.to") || message.includes("devto")) {
+                logger_1.logger.debug(`File ${filePath} determined as Dev.to (commit-based)`);
                 return "devto";
-            if (message.includes("hashnode"))
+            }
+            if (message.includes("hashnode")) {
+                logger_1.logger.debug(`File ${filePath} determined as Hashnode (commit-based)`);
                 return "hashnode";
+            }
         }
+        logger_1.logger.debug(`No platform determined for file: ${filePath}`);
         return null;
     }
     parseMarkdownFile(filePath) {
+        logger_1.logger.debug(`Parsing markdown file: ${filePath}`);
         const fullPath = (0, path_1.join)(process.cwd(), this.config.postsDirectory, filePath);
         if (!(0, fs_1.existsSync)(fullPath)) {
+            logger_1.logger.error(`File not found: ${fullPath}`);
             throw new Error(`File not found: ${fullPath}`);
         }
         const fileContent = (0, fs_1.readFileSync)(fullPath, "utf-8");
         const parsed = (0, front_matter_1.default)(fileContent);
-        const title = parsed.attributes.title || this.extractTitleFromContent(parsed.body);
-        return {
+        // Use markdownProcessor to extract title and description
+        const title = parsed.attributes.title ||
+            this.markdownProcessor.extractTitle(parsed.body) ||
+            this.extractTitleFromContent(parsed.body);
+        const description = parsed.attributes.description ||
+            this.markdownProcessor.extractDescription(parsed.body);
+        // Use markdownProcessor to extract tags if not provided in front matter
+        const tags = parsed.attributes.tags && parsed.attributes.tags.length > 0
+            ? parsed.attributes.tags
+            : this.markdownProcessor.extractTags(parsed.body);
+        logger_1.logger.debug(`Extracted metadata - Title: ${title}, Tags: ${tags.join(", ")}, Has description: ${!!description}`);
+        // Validate markdown content
+        const validation = this.markdownProcessor.validateMarkdown(parsed.body);
+        if (!validation.isValid) {
+            logger_1.logger.warn(`Markdown validation issues in ${filePath}: ${validation.errors.join(", ")}`);
+        }
+        else {
+            logger_1.logger.debug(`Markdown validation passed for ${filePath}`);
+        }
+        const blogPost = {
             title,
             content: parsed.body,
-            tags: parsed.attributes.tags || [],
+            tags,
             canonical_url: parsed.attributes.canonical_url,
-            description: parsed.attributes.description,
+            description,
             cover_image: parsed.attributes.cover_image,
             published: parsed.attributes.published !== false,
             series: parsed.attributes.series,
             ...parsed.attributes,
         };
+        logger_1.logger.debug(`Successfully parsed file: ${filePath}`);
+        return blogPost;
     }
     extractTitleFromContent(content) {
+        logger_1.logger.debug("Extracting title from content");
         const lines = content.split("\n");
         for (const line of lines) {
             const trimmed = line.trim();
             if (trimmed.startsWith("# ")) {
-                return trimmed.substring(2).trim();
+                const title = trimmed.substring(2).trim();
+                logger_1.logger.debug(`Extracted title from content: ${title}`);
+                return title;
             }
         }
+        logger_1.logger.warn("No title found in content, using 'Untitled Post'");
         return "Untitled Post";
     }
     async publishBlogs(changedFiles, context) {
+        logger_1.logger.info(`Starting publication process for ${changedFiles.length} files`);
         const results = {
             published: [],
             failed: [],
         };
         const commitMessage = context.payload.head_commit?.message;
+        if (commitMessage) {
+            logger_1.logger.debug(`Commit message: ${commitMessage}`);
+        }
         for (const file of changedFiles) {
             try {
+                logger_1.logger.info(`Processing file: ${file}`);
                 const platform = this.determinePlatform(file, commitMessage);
                 if (!platform) {
-                    core.info(`Skipping ${file} - no platform determined`);
+                    logger_1.logger.info(`Skipping ${file} - no platform determined`);
                     continue;
                 }
-                core.info(`Publishing ${file} to ${platform}`);
+                logger_1.logger.debug(`Platform determined: ${platform} for file: ${file}`);
+                // Check if already published and update is disabled
+                const alreadyPublished = await this.checkIfAlreadyPublished(file, platform);
+                if (alreadyPublished) {
+                    logger_1.logger.info(`Skipping ${file} - already published and update disabled`);
+                    continue;
+                }
+                logger_1.logger.info(`Publishing ${file} to ${platform}`);
                 const blogPost = this.parseMarkdownFile(file);
+                // Process images for the specific platform
+                blogPost.content = this.markdownProcessor.processImagesForPlatform(blogPost.content, platform);
+                logger_1.logger.debug(`Processed images for platform: ${platform}`);
                 const result = await this.publishToPlatform(platform, blogPost, file);
                 if (result.success) {
+                    // Track published posts
+                    this.publishedPosts.set(file, { platform, postId: result.postId });
                     results.published.push(result);
+                    logger_1.logger.info(`Successfully published ${file} to ${platform}: ${result.url}`);
                 }
                 else {
                     results.failed.push(result);
+                    logger_1.logger.warn(`Failed to publish ${file} to ${platform}: ${result.error}`);
                 }
             }
             catch (error) {
                 const errorMessage = error instanceof Error ? error.message : String(error);
-                core.error(`Error processing ${file}: ${errorMessage}`);
+                logger_1.logger.error(`Error processing ${file}: ${errorMessage}`);
                 results.failed.push({
                     platform: "medium", // default, will be overridden if platform was determined
                     file,
@@ -764,42 +1127,52 @@ class BlogsPublisher {
                 });
             }
         }
+        logger_1.logger.info(`Publication process completed. Successful: ${results.published.length}, Failed: ${results.failed.length}`);
         return results;
     }
     async publishToPlatform(platform, blogPost, file) {
         if (this.config.dryRun) {
-            core.info(`[DRY RUN] Would publish ${file} to ${platform}`);
+            logger_1.logger.info(`[DRY RUN] Would publish ${file} to ${platform}`);
             return {
                 platform,
                 file,
                 success: true,
-                url: `https://example.com/${platform}/dry-run`,
+                url: `https://example.com/${platform}/dry_run`,
             };
         }
         try {
+            logger_1.logger.debug(`Publishing to ${platform}: ${blogPost.title}`);
             let result;
             switch (platform) {
                 case "medium":
                     if (!this.config.mediumToken) {
+                        logger_1.logger.error("Medium token not provided");
                         throw new Error("Medium token not provided");
                     }
+                    logger_1.logger.debug("Calling Medium client");
                     result = await this.mediumClient.publishPost(blogPost);
                     break;
                 case "devto":
                     if (!this.config.devtoToken) {
+                        logger_1.logger.error("Dev.to token not provided");
                         throw new Error("Dev.to token not provided");
                     }
+                    logger_1.logger.debug("Calling Dev.to client");
                     result = await this.devtoClient.publishPost(blogPost);
                     break;
                 case "hashnode":
                     if (!this.config.hashnodeToken) {
+                        logger_1.logger.error("Hashnode token not provided");
                         throw new Error("Hashnode token not provided");
                     }
+                    logger_1.logger.debug("Calling Hashnode client");
                     result = await this.hashnodeClient.publishPost(blogPost, this.config.hashnodePublicationId);
                     break;
                 default:
+                    logger_1.logger.error(`Unsupported platform: ${platform}`);
                     throw new Error(`Unsupported platform: ${platform}`);
             }
+            logger_1.logger.debug(`Success response from ${platform}: ${JSON.stringify(result)}`);
             return {
                 platform,
                 file,
@@ -810,7 +1183,7 @@ class BlogsPublisher {
         }
         catch (error) {
             const errorMessage = error instanceof Error ? error.message : String(error);
-            core.error(`Failed to publish to ${platform}: ${errorMessage}`);
+            logger_1.logger.error(`Failed to publish to ${platform}: ${errorMessage}`);
             return {
                 platform,
                 file,
@@ -821,6 +1194,57 @@ class BlogsPublisher {
     }
 }
 exports.BlogsPublisher = BlogsPublisher;
+
+
+/***/ }),
+
+/***/ 885:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.logger = exports.Logger = exports.LogLevel = void 0;
+var LogLevel;
+(function (LogLevel) {
+    LogLevel[LogLevel["ERROR"] = 0] = "ERROR";
+    LogLevel[LogLevel["WARN"] = 1] = "WARN";
+    LogLevel[LogLevel["INFO"] = 2] = "INFO";
+    LogLevel[LogLevel["DEBUG"] = 3] = "DEBUG";
+})(LogLevel || (exports.LogLevel = LogLevel = {}));
+class Logger {
+    constructor(level = LogLevel.INFO) {
+        this.level = level;
+        this.debug(`Logger initialized with level: ${LogLevel[level]}`);
+    }
+    setLevel(level) {
+        this.debug(`Changing log level from ${LogLevel[this.level]} to ${LogLevel[level]}`);
+        this.level = level;
+    }
+    error(message, ...meta) {
+        if (this.level >= LogLevel.ERROR) {
+            console.error(`[ERROR] ${message}`, ...meta);
+        }
+    }
+    warn(message, ...meta) {
+        if (this.level >= LogLevel.WARN) {
+            console.warn(`[WARN] ${message}`, ...meta);
+        }
+    }
+    info(message, ...meta) {
+        if (this.level >= LogLevel.INFO) {
+            console.info(`[INFO] ${message}`, ...meta);
+        }
+    }
+    debug(message, ...meta) {
+        if (this.level >= LogLevel.DEBUG) {
+            console.debug(`[DEBUG] ${message}`, ...meta);
+        }
+    }
+}
+exports.Logger = Logger;
+// Singleton instance
+exports.logger = new Logger();
 
 
 /***/ }),
@@ -836,44 +1260,58 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.MarkdownProcessor = void 0;
 const markdown_it_1 = __importDefault(__nccwpck_require__(6696));
+const logger_1 = __nccwpck_require__(885);
 class MarkdownProcessor {
     constructor() {
+        logger_1.logger.debug("Initializing MarkdownProcessor");
         this.md = new markdown_it_1.default({
             html: true,
             linkify: true,
             typographer: true,
         });
+        logger_1.logger.debug("MarkdownProcessor initialized successfully");
     }
     toHtml(markdown) {
-        return this.md.render(markdown);
+        logger_1.logger.debug("Converting markdown to HTML");
+        const result = this.md.render(markdown);
+        logger_1.logger.debug(`Converted markdown to HTML (length: ${result.length} characters)`);
+        return result;
     }
     extractTitle(markdown) {
+        logger_1.logger.debug("Extracting title from markdown");
         const lines = markdown.split("\n");
         for (const line of lines) {
             const trimmed = line.trim();
             if (trimmed.startsWith("# ")) {
-                return trimmed.substring(2).trim();
+                const title = trimmed.substring(2).trim();
+                logger_1.logger.debug(`Extracted title: ${title}`);
+                return title;
             }
         }
+        logger_1.logger.debug("No title found in markdown");
         return null;
     }
     extractDescription(markdown, maxLength = 160) {
+        logger_1.logger.debug(`Extracting description from markdown (max length: ${maxLength})`);
         // Remove front matter if present
         const content = markdown.replace(/^---[\s\S]*?---\n/, "");
-        // Remove markdown formatting
+        logger_1.logger.debug("Removed front matter from markdown");
+        // Remove Markdown formatting
         const plainText = content
             .replace(/^#{1,6}\s+/gm, "") // Remove headers
             .replace(/\*\*(.+?)\*\*/g, "$1") // Remove bold
             .replace(/\*(.+?)\*/g, "$1") // Remove italic
             .replace(/`(.+?)`/g, "$1") // Remove inline code
             .replace(/```[\s\S]*?```/g, "") // Remove code blocks
-            .replace(/\[(.+?)\]\(.+?\)/g, "$1") // Remove links
-            .replace(/!\[.*?\]\(.+?\)/g, "") // Remove images
+            .replace(/\[(.+?)]\(.+?\)/g, "$1") // Remove links
+            .replace(/!\[.*?]\(.+?\)/g, "") // Remove images
             .replace(/^\s*[-*+]\s+/gm, "") // Remove list markers
             .replace(/^\s*\d+\.\s+/gm, "") // Remove numbered list markers
             .replace(/\n+/g, " ") // Replace newlines with spaces
             .trim();
+        logger_1.logger.debug(`Plain text extracted (length: ${plainText.length} characters)`);
         if (plainText.length <= maxLength) {
+            logger_1.logger.debug("Plain text fits within max length, returning as-is");
             return plainText;
         }
         // Find the last complete sentence within the limit
@@ -884,69 +1322,103 @@ class MarkdownProcessor {
         const lastSentenceEnd = Math.max(lastPeriod, lastExclamation, lastQuestion);
         if (lastSentenceEnd > maxLength * 0.7) {
             // If we find a sentence end in the last 30%
-            return truncated.substring(0, lastSentenceEnd + 1);
+            const result = truncated.substring(0, lastSentenceEnd + 1);
+            logger_1.logger.debug(`Truncated at sentence end (length: ${result.length})`);
+            return result;
         }
         // Otherwise, find the last space and truncate there
         const lastSpace = truncated.lastIndexOf(" ");
         if (lastSpace > 0) {
-            return truncated.substring(0, lastSpace) + "...";
+            const result = truncated.substring(0, lastSpace) + "...";
+            logger_1.logger.debug(`Truncated at word boundary (length: ${result.length})`);
+            return result;
         }
-        return truncated + "...";
+        const result = truncated + "...";
+        logger_1.logger.debug(`Truncated at character boundary (length: ${result.length})`);
+        return result;
     }
     extractTags(markdown) {
+        logger_1.logger.debug("Extracting tags from markdown");
         const tags = new Set();
-        // Extract hashtags from content
-        const hashtagRegex = /#(\w+)/g;
+        // Extract hashtags from content - support letters, numbers, underscores, and hyphens
+        const hashtagRegex = /#([\w-]+)/g;
         let match;
+        let count = 0;
         while ((match = hashtagRegex.exec(markdown)) !== null) {
             tags.add(match[1].toLowerCase());
+            count++;
         }
-        return Array.from(tags);
+        const tagArray = Array.from(tags);
+        logger_1.logger.debug(`Extracted ${count} hashtags, ${tagArray.length} unique tags: ${tagArray.join(", ")}`);
+        return tagArray;
     }
     validateMarkdown(markdown) {
+        logger_1.logger.debug("Validating markdown content");
         const errors = [];
         if (!markdown.trim()) {
             errors.push("Markdown content is empty");
+            logger_1.logger.warn("Markdown content is empty");
         }
         if (!this.extractTitle(markdown)) {
             errors.push("No title (# heading) found in markdown");
+            logger_1.logger.warn("No title found in markdown");
         }
         // Check for unclosed code blocks
         const codeBlockMatches = markdown.match(/```/g);
         if (codeBlockMatches && codeBlockMatches.length % 2 !== 0) {
             errors.push("Unclosed code block detected");
+            logger_1.logger.warn("Unclosed code block detected in markdown");
         }
         // Check for unclosed inline code
         const inlineCodeMatches = markdown.match(/(?<!\\)`/g);
         if (inlineCodeMatches && inlineCodeMatches.length % 2 !== 0) {
             errors.push("Unclosed inline code detected");
+            logger_1.logger.warn("Unclosed inline code detected in markdown");
+        }
+        const isValid = errors.length === 0;
+        if (isValid) {
+            logger_1.logger.debug("Markdown validation passed");
+        }
+        else {
+            logger_1.logger.warn(`Markdown validation failed with ${errors.length} errors: ${errors.join(", ")}`);
         }
         return {
-            isValid: errors.length === 0,
+            isValid,
             errors,
         };
     }
     processImagesForPlatform(markdown, platform) {
-        // Platform-specific image processing
-        switch (platform) {
-            case "medium":
-                // Medium prefers images to be uploaded separately
-                return markdown.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (match, alt, url) => {
+        logger_1.logger.debug(`Processing images for platform: ${platform}`);
+        let processedCount = 0;
+        const result = markdown.replace(/!\[([^\]]*)]\(([^)]+)\)/g, (match, _alt, url) => {
+            // Use underscore prefix for unused parameter
+            processedCount++;
+            // Platform-specific image processing
+            switch (platform) {
+                case "medium":
+                    // Medium prefers images to be uploaded separately
                     if (url.startsWith("http")) {
+                        logger_1.logger.debug(`Keeping external image URL for Medium: ${url}`);
                         return match; // Keep external URLs as-is
                     }
                     // Convert relative URLs to absolute if needed
+                    logger_1.logger.debug(`Processing relative image URL for Medium: ${url}`);
                     return match;
-                });
-            case "devto":
-                // Dev.to handles images well as-is
-                return markdown;
-            case "hashnode":
-                // Hashnode handles images well as-is
-                return markdown;
-            default:
-                return markdown;
-        }
+                case "devto":
+                    // Dev.to handles images well as-is
+                    logger_1.logger.debug(`Keeping image URL as-is for Dev.to: ${url}`);
+                    return match;
+                case "hashnode":
+                    // Hashnode handles images well as-is
+                    logger_1.logger.debug(`Keeping image URL as-is for Hashnode: ${url}`);
+                    return match;
+                default:
+                    logger_1.logger.debug(`Unknown platform, keeping image URL: ${url}`);
+                    return match;
+            }
+        });
+        logger_1.logger.debug(`Processed ${processedCount} images for ${platform}`);
+        return result;
     }
 }
 exports.MarkdownProcessor = MarkdownProcessor;

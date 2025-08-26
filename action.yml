@@ -2,42 +2,53 @@ name: "Blogs Publisher"
 description: "Publish Markdown blogs to Medium, Dev.to, and Hashnode"
 author: "kodelint"
 inputs:
-  medium-token:
+  medium_token:
     description: "Medium Integration Token"
     required: false
-  devto-token:
+  devto_token:
     description: "Dev.to API Key"
     required: false
-  hashnode-token:
+  hashnode_token:
     description: "Hashnode Personal Access Token"
     required: false
-  hashnode-publication-id:
+  github_token:
+    description: 'GitHub token for accessing repository contents'
+    required: true
+  hashnode_publication_id:
     description: "Hashnode Publication ID (optional)"
     required: false
-  medium-path:
+  medium_path:
     description: "Path pattern for Medium posts"
     required: false
     default: "posts/medium"
-  devto-path:
+  devto_path:
     description: "Path pattern for Dev.to posts"
     required: false
     default: "posts/devto"
-  hashnode-path:
+  hashnode_path:
     description: "Path pattern for Hashnode posts"
     required: false
     default: "posts/hashnode"
-  use-commit-message:
+  use_commit_message:
     description: "Use commit message to determine platform (true/false)"
     required: false
     default: "false"
-  dry-run:
-    description: "Run in dry-run mode without publishing"
+  dry_run:
+    description: "Run in dry_run mode without publishing"
     required: false
     default: "false"
-  posts-directory:
+  posts_directory:
     description: "Base directory for posts"
     required: false
     default: "."
+  update_already_published:
+    description: 'Update posts that were already published'
+    default: 'true'
+    required: false
+  debugging_enabled:
+    description: 'Enable debug logging'
+    default: 'false'
+    required: false
 outputs:
   published-posts:
     description: "JSON array of successfully published posts"

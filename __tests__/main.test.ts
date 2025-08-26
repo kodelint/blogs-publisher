@@ -1,184 +1,477 @@
-// main.test.ts
 import * as core from "@actions/core";
-import * as github from "@actions/github";
 import { run } from "../src/main";
 import { BlogsPublisher } from "../src/publisher";
+import { logger } from "../src/utils/logger";
 
-// Mock the dependencies
 jest.mock("@actions/core");
-jest.mock("@actions/github");
 jest.mock("../src/publisher");
+jest.mock("../src/utils/logger");
 
-describe("main", () => {
-  const mockGetInput = core.getInput as jest.MockedFunction<
-    typeof core.getInput
-  >;
-  const mockGetBooleanInput = core.getBooleanInput as jest.MockedFunction<
-    typeof core.getBooleanInput
-  >;
-  const mockSetFailed = core.setFailed as jest.MockedFunction<
-    typeof core.setFailed
-  >;
-  const mockSetOutput = core.setOutput as jest.MockedFunction<
-    typeof core.setOutput
-  >;
-  const mockInfo = core.info as jest.MockedFunction<typeof core.info>;
+const mockedCore = core as jest.Mocked<typeof core>;
+const mockedBlogsPublisher = BlogsPublisher as jest.MockedClass<
+  typeof BlogsPublisher
+>;
 
-  // Mock the BlogsPublisher methods
-  const mockGetChangedFiles = jest.fn();
-  const mockPublishBlogs = jest.fn();
-
+describe("Main Action", () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    // Clear environment variable
+    delete process.env.DEBUGGING_ENABLED;
 
-    // Setup default mock implementations
-    mockGetInput.mockImplementation((name: string) => {
-      switch (name) {
-        case "medium-token":
-          return "medium-token";
-        case "devto-token":
-          return "devto-token";
-        case "hashnode-token":
-          return "hashnode-token";
-        case "hashnode-publication-id":
-          return "pub-id";
-        case "medium-path":
-          return "posts/medium";
-        case "devto-path":
-          return "posts/devto";
-        case "hashnode-path":
-          return "posts/hashnode";
-        case "posts-directory":
-          return ".";
-        default:
-          return "";
-      }
+    // Mock ALL required inputs with proper values
+    mockedCore.getInput.mockImplementation((key: string) => {
+      const inputs: { [key: string]: string } = {
+        medium_token: "medium-token",
+        devto_token: "devto-token",
+        hashnode_token: "hashnode-token",
+        hashnode_publication_id: "hashnode-pub-id",
+        github_token: "github-token",
+        medium_path: "posts/medium",
+        devto_path: "posts/devto",
+        hashnode_path: "posts/hashnode",
+        posts_directory: ".",
+      };
+      return inputs[key] || "";
     });
 
-    mockGetBooleanInput.mockImplementation((name: string) => {
-      switch (name) {
-        case "use-commit-message":
-          return false;
-        case "dry-run":
-          return false;
-        default:
-          return false;
-      }
-    });
-
-    // Mock BlogsPublisher constructor
-    (BlogsPublisher as jest.Mock).mockImplementation(() => ({
-      getChangedFiles: mockGetChangedFiles,
-      publishBlogs: mockPublishBlogs,
-    }));
-
-    // Default mock implementations
-    mockGetChangedFiles.mockResolvedValue([]);
-    mockPublishBlogs.mockResolvedValue({
-      published: [],
-      failed: [],
+    mockedCore.getBooleanInput.mockImplementation((key: string) => {
+      const booleans: { [key: string]: boolean } = {
+        use_commit_message: false,
+        dry_run: false,
+        update_already_published: true,
+        debugging_enabled: false, // Make sure this returns false
+      };
+      return booleans[key] || false;
     });
   });
 
-  it("should handle errors and call setFailed", async () => {
-    // Force an error by making getInput throw
-    mockGetInput.mockImplementation(() => {
-      throw new Error("Test error");
-    });
+  test("should run successfully with no changed files", async () => {
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue([]),
+      publishBlogs: jest.fn(), // This should NOT be called when no files
+    };
+
+    const mockConstructor = jest.fn(() => mockInstance);
+    mockedBlogsPublisher.mockImplementation(mockConstructor as any);
 
     await run();
 
-    expect(mockSetFailed).toHaveBeenCalledWith("Test error");
+    // Check if BlogsPublisher was instantiated
+    expect(mockConstructor).toHaveBeenCalled();
+
+    // Check if getChangedFiles was called
+    expect(mockInstance.getChangedFiles).toHaveBeenCalled();
+
+    // Check that publishBlogs was NOT called (since no files)
+    expect(mockInstance.publishBlogs).not.toHaveBeenCalled();
+
+    // Check that setOutput was NOT called (this is the correct behavior!)
+    expect(mockedCore.setOutput).not.toHaveBeenCalled();
+
+    // Check that setFailed was NOT called
+    expect(mockedCore.setFailed).not.toHaveBeenCalled();
   });
 
-  it("should handle GitHub context without commits", async () => {
-    // Mock empty GitHub context
-    Object.defineProperty(github, "context", {
-      value: {
-        payload: {},
-      },
-      writable: true,
-    });
+  test("should call setOutput when files are found", async () => {
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue(["test.md"]),
+      publishBlogs: jest.fn().mockResolvedValue({
+        published: [
+          {
+            platform: "medium",
+            file: "test.md",
+            success: true,
+            url: "https://medium.com/test",
+          },
+        ],
+        failed: [],
+      }),
+    };
+
+    const mockConstructor = jest.fn(() => mockInstance);
+    mockedBlogsPublisher.mockImplementation(mockConstructor as any);
 
     await run();
 
-    // Should complete without errors
-    expect(mockSetFailed).not.toHaveBeenCalled();
-    expect(mockInfo).toHaveBeenCalledWith("Found 0 changed files");
-  });
+    // Check if BlogsPublisher was instantiated
+    expect(mockConstructor).toHaveBeenCalled();
 
-  it("should handle successful execution", async () => {
-    // Mock GitHub context with commits
-    Object.defineProperty(github, "context", {
-      value: {
-        payload: {
-          commits: [
-            {
-              added: ["posts/medium/test.md"],
-              modified: [],
-            },
-          ],
-        },
-      },
-      writable: true,
-    });
+    // Check if getChangedFiles was called
+    expect(mockInstance.getChangedFiles).toHaveBeenCalled();
 
-    // Mock successful execution
-    mockGetChangedFiles.mockResolvedValue(["posts/medium/test.md"]);
-    mockPublishBlogs.mockResolvedValue({
-      published: [
+    // Check that publishBlogs was called
+    expect(mockInstance.publishBlogs).toHaveBeenCalled();
+
+    // Check that setOutput was called with the correct values
+    expect(mockedCore.setOutput).toHaveBeenCalledWith(
+      "published-posts",
+      JSON.stringify([
         {
           platform: "medium",
           file: "test.md",
           success: true,
-          url: "https://example.com",
+          url: "https://medium.com/test",
         },
-      ],
-      failed: [],
-    });
+      ]),
+    );
+    expect(mockedCore.setOutput).toHaveBeenCalledWith("failed-posts", "[]");
 
-    await run();
-
-    expect(mockInfo).toHaveBeenCalled();
-    expect(mockSetFailed).not.toHaveBeenCalled();
-  });
-  it("should handle publisher errors", async () => {
-    // Mock GitHub context with commits
-    Object.defineProperty(github, "context", {
-      value: {
-        payload: {
-          commits: [
-            {
-              added: ["posts/medium/test.md"],
-              modified: [],
-            },
-          ],
-        },
-      },
-      writable: true,
-    });
-
-    // Mock publisher to throw error
-    mockGetChangedFiles.mockRejectedValueOnce(new Error("Publisher error"));
-
-    await run();
-
-    expect(mockSetFailed).toHaveBeenCalledWith("Publisher error");
+    // Check that setFailed was NOT called
+    expect(mockedCore.setFailed).not.toHaveBeenCalled();
   });
 
-  it("should handle empty config values", async () => {
-    // Mock empty config values
-    mockGetInput.mockImplementation((name: string) => {
-      return ""; // Empty for all inputs
-    });
-
-    mockGetBooleanInput.mockImplementation((name: string) => {
-      return false; // Default false for all boolean inputs
-    });
+  test("should handle errors gracefully", async () => {
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockRejectedValue(new Error("Test error")),
+      publishBlogs: jest.fn(),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
 
     await run();
 
-    // Should complete without errors
-    expect(mockSetFailed).not.toHaveBeenCalled();
+    expect(mockedCore.setFailed).toHaveBeenCalledWith("Test error");
+  });
+
+  test("should enable debug logging when debugging is enabled via environment", async () => {
+    process.env.DEBUGGING_ENABLED = "true";
+
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue([]),
+      publishBlogs: jest.fn().mockResolvedValue({
+        published: [],
+        failed: [],
+      }),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    expect(logger.setLevel).toHaveBeenCalled();
+  });
+
+  test("should handle successful publication with files", async () => {
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue(["test.md"]),
+      publishBlogs: jest.fn().mockResolvedValue({
+        published: [
+          {
+            platform: "medium",
+            file: "test.md",
+            success: true,
+            url: "https://medium.com/test",
+          },
+        ],
+        failed: [],
+      }),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    expect(mockedCore.setOutput).toHaveBeenCalledWith(
+      "published-posts",
+      JSON.stringify([
+        {
+          platform: "medium",
+          file: "test.md",
+          success: true,
+          url: "https://medium.com/test",
+        },
+      ]),
+    );
+    expect(mockedCore.setOutput).toHaveBeenCalledWith("failed-posts", "[]");
+    expect(mockedCore.setFailed).not.toHaveBeenCalled();
+  });
+
+  test("should handle failed publications", async () => {
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue(["test.md"]),
+      publishBlogs: jest.fn().mockResolvedValue({
+        published: [],
+        failed: [
+          {
+            platform: "medium",
+            file: "test.md",
+            success: false,
+            error: "API error",
+          },
+        ],
+      }),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    expect(mockedCore.setFailed).toHaveBeenCalledWith(
+      "Failed to publish 1 posts",
+    );
+  });
+
+  test("should handle debugging enabled via both environment and input", async () => {
+    process.env.DEBUGGING_ENABLED = "true";
+
+    mockedCore.getBooleanInput.mockImplementation((key: string) => {
+      return key === "debugging_enabled";
+    });
+
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue([]),
+      publishBlogs: jest.fn().mockResolvedValue({
+        published: [],
+        failed: [],
+      }),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    expect(logger.setLevel).toHaveBeenCalled();
+  });
+});
+
+describe("Main Action - Branch Coverage", () => {
+  test("should handle missing tokens gracefully", async () => {
+    // Mock some tokens as empty
+    mockedCore.getInput.mockImplementation((key: string) => {
+      const inputs: { [key: string]: string } = {
+        medium_token: "",
+        devto_token: "devto-token",
+        hashnode_token: "hashnode-token",
+        hashnode_publication_id: "hashnode-pub-id",
+        github_token: "github-token",
+        medium_path: "posts/medium",
+        devto_path: "posts/devto",
+        hashnode_path: "posts/hashnode",
+        posts_directory: ".",
+      };
+      return inputs[key] || "";
+    });
+
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue(["test.md"]),
+      publishBlogs: jest.fn().mockResolvedValue({
+        published: [],
+        failed: [
+          {
+            platform: "medium",
+            file: "test.md",
+            success: false,
+            error: "Medium token not provided",
+          },
+        ],
+      }),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    expect(mockedCore.setFailed).toHaveBeenCalledWith(
+      "Failed to publish 1 posts",
+    );
+  });
+});
+
+describe("Main Action - Additional Coverage", () => {
+  test("should handle empty posts directory input", async () => {
+    mockedCore.getInput.mockImplementation((key: string) => {
+      const inputs: { [key: string]: string } = {
+        medium_token: "medium-token",
+        devto_token: "devto-token",
+        hashnode_token: "hashnode-token",
+        hashnode_publication_id: "hashnode-pub-id",
+        github_token: "github-token",
+        medium_path: "posts/medium",
+        devto_path: "posts/devto",
+        hashnode_path: "posts/hashnode",
+        posts_directory: "", // Empty string
+      };
+      return inputs[key] || "";
+    });
+
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue([]),
+      publishBlogs: jest.fn(),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    // Should still work with default posts directory
+    expect(mockInstance.getChangedFiles).toHaveBeenCalled();
+  });
+
+  test("should handle default path values when inputs are empty", async () => {
+    mockedCore.getInput.mockImplementation((key: string) => {
+      const inputs: { [key: string]: string } = {
+        medium_token: "medium-token",
+        devto_token: "devto-token",
+        hashnode_token: "hashnode-token",
+        hashnode_publication_id: "hashnode-pub-id",
+        github_token: "github-token",
+        medium_path: "", // Empty - should use default
+        devto_path: "", // Empty - should use default
+        hashnode_path: "", // Empty - should use default
+        posts_directory: ".",
+      };
+      return inputs[key] || "";
+    });
+
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue([]),
+      publishBlogs: jest.fn(),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    // Should still work with default paths
+    expect(mockInstance.getChangedFiles).toHaveBeenCalled();
+  });
+
+  test("should handle updateAlreadyPublished set to false", async () => {
+    mockedCore.getBooleanInput.mockImplementation((key: string) => {
+      if (key === "update_already_published") return false;
+      return false;
+    });
+
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue([]),
+      publishBlogs: jest.fn(),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    // Should still work with updateAlreadyPublished = false
+    expect(mockInstance.getChangedFiles).toHaveBeenCalled();
+  });
+
+  test("should handle non-Error object thrown", async () => {
+    const mockInstance = {
+      getChangedFiles: jest
+        .fn()
+        .mockRejectedValue("String error instead of Error object"),
+      publishBlogs: jest.fn(),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    expect(mockedCore.setFailed).toHaveBeenCalledWith(
+      "String error instead of Error object",
+    );
+  });
+
+  test("should handle error with null or undefined message", async () => {
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockRejectedValue({ message: null }),
+      publishBlogs: jest.fn(),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    expect(mockedCore.setFailed).toHaveBeenCalled();
+  });
+
+  test("should log debug information when files are found", async () => {
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue(["test1.md", "test2.md"]),
+      publishBlogs: jest.fn().mockResolvedValue({
+        published: [
+          {
+            platform: "medium",
+            file: "test1.md",
+            success: true,
+            url: "https://medium.com/test1",
+          },
+        ],
+        failed: [
+          {
+            platform: "devto",
+            file: "test2.md",
+            success: false,
+            error: "API error",
+          },
+        ],
+      }),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    process.env.DEBUGGING_ENABLED = "true";
+
+    await run();
+
+    expect(logger.debug).toHaveBeenCalledWith(
+      'Files to process: ["test1.md","test2.md"]',
+    );
+  });
+
+  test("should handle mixed success/failure results", async () => {
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue(["test1.md", "test2.md"]),
+      publishBlogs: jest.fn().mockResolvedValue({
+        published: [
+          {
+            platform: "medium",
+            file: "test1.md",
+            success: true,
+            url: "https://medium.com/test1",
+          },
+        ],
+        failed: [
+          {
+            platform: "devto",
+            file: "test2.md",
+            success: false,
+            error: "API error",
+          },
+        ],
+      }),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    expect(mockedCore.setOutput).toHaveBeenCalledWith(
+      "published-posts",
+      expect.any(String),
+    );
+    expect(mockedCore.setOutput).toHaveBeenCalledWith(
+      "failed-posts",
+      expect.any(String),
+    );
+    expect(mockedCore.setFailed).toHaveBeenCalledWith(
+      "Failed to publish 1 posts",
+    );
+  });
+
+  test("should handle push event with commits but no markdown files", async () => {
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue([]),
+      publishBlogs: jest.fn(),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    expect(logger.info).toHaveBeenCalledWith(
+      "No markdown files to process, exiting",
+    );
+    expect(mockInstance.publishBlogs).not.toHaveBeenCalled();
+  });
+
+  test("should handle different GitHub event types", async () => {
+    // This tests that the context is passed through correctly
+    const mockInstance = {
+      getChangedFiles: jest.fn().mockResolvedValue([]),
+      publishBlogs: jest.fn(),
+    };
+    mockedBlogsPublisher.mockImplementation(() => mockInstance as any);
+
+    await run();
+
+    // The getChangedFiles should be called with the mocked context
+    expect(mockInstance.getChangedFiles).toHaveBeenCalled();
   });
 });

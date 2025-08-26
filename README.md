@@ -17,7 +17,7 @@ A powerful GitHub Action that automatically publishes your Markdown blog posts t
 - 🎯 **Smart Platform Detection**: Automatically determines target platform based on file path or commit message
 - 📁 **Flexible File Organization**: Supports customizable directory structures for different platforms
 - 🔄 **Multiple Publishing Options**: Publish based on file paths or commit messages
-- 📋 **Rich Metadata Support**: Full support for frontmatter, tags, canonical URLs, cover images, and more
+- 📋 **Rich Metadata Support**: Full support for front-matter, tags, canonical URLs, cover images, and more
 - 🧪 **Dry Run Mode**: Test your setup without actually publishing
 - 📊 **Comprehensive Testing**: 80%+ test coverage with local and CI testing
 - 🔒 **Secure**: No sensitive data stored, uses GitHub secrets for API tokens
@@ -44,9 +44,9 @@ jobs:
       - name: Publish to blog platforms
         uses: kodelint/blogs-publisher@v1
         with:
-          medium-token: ${{ secrets.MEDIUM_TOKEN }}
-          devto-token: ${{ secrets.DEVTO_TOKEN }}
-          hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
+          medium_token: ${{ secrets.MEDIUM_TOKEN }}
+          devto_token: ${{ secrets.DEVTO_TOKEN }}
+          hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
 ```
 
 ### Advanced Configuration
@@ -55,16 +55,17 @@ jobs:
 - name: Publish blogs with custom paths
   uses: kodelint/blogs-publisher@v1
   with:
-    medium-token: ${{ secrets.MEDIUM_TOKEN }}
-    devto-token: ${{ secrets.DEVTO_TOKEN }}
-    hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
-    hashnode-publication-id: ${{ secrets.HASHNODE_PUBLICATION_ID }}
-    medium-path: "content/medium"
-    devto-path: "content/devto"
-    hashnode-path: "content/hashnode"
-    use-commit-message: true
-    dry-run: false
-    posts-directory: "./blog"
+    medium_token: ${{ secrets.MEDIUM_TOKEN }}
+    devto_token: ${{ secrets.DEVTO_TOKEN }}
+    hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
+    hashnode_publication_id: ${{ secrets.HASHNODE_PUBLICATION_ID }}
+    medium_path: "content/medium"
+    devto_path: "content/devto"
+    hashnode_path: "content/hashnode"
+    use_commit_message: true
+    dry_run: false
+    posts_directory: "./blog"
+    update_already_published: false # Default is `true`
 ```
 
 ## 📂 Directory Structure
@@ -90,14 +91,14 @@ You can customize the directory structure using the path inputs:
 
 ```yaml
 with:
-  medium-path: "blog/medium-posts"
-  devto-path: "articles/dev"
-  hashnode-path: "content/hashnode"
+  medium_path: "blog/medium-posts"
+  devto_path: "articles/dev"
+  hashnode_path: "content/hashnode"
 ```
 
-## 📝 Frontmatter Support
+## 📝 Front-matter Support
 
-The action supports rich frontmatter for all platforms:
+The action supports rich front-matter for all platforms:
 
 ```markdown
 ---
@@ -160,7 +161,7 @@ Enable commit message detection:
 
 ```yaml
 with:
-  use-commit-message: true
+  use_commit_message: true
 ```
 
 Then use commit messages like:
@@ -174,24 +175,24 @@ Then use commit messages like:
 ### Inputs
 
 | Input                     | Description                               | Required | Default          |
-| ------------------------- | ----------------------------------------- | -------- | ---------------- |
-| `medium-token`            | Medium Integration Token                  | No\*     | -                |
-| `devto-token`             | Dev.to API Key                            | No\*     | -                |
-| `hashnode-token`          | Hashnode Personal Access Token            | No\*     | -                |
-| `hashnode-publication-id` | Hashnode Publication ID                   | No       | -                |
-| `medium-path`             | Medium posts directory pattern            | No       | `posts/medium`   |
-| `devto-path`              | Dev.to posts directory pattern            | No       | `posts/devto`    |
-| `hashnode-path`           | Hashnode posts directory pattern          | No       | `posts/hashnode` |
-| `use-commit-message`      | Use commit message for platform detection | No       | `false`          |
-| `dry-run`                 | Run without publishing                    | No       | `false`          |
-| `posts-directory`         | Base directory for posts                  | No       | `.`              |
+|---------------------------|-------------------------------------------|----------|------------------|
+| `medium_token`            | Medium Integration Token                  | No\*     | -                |
+| `devto_token`             | Dev.to API Key                            | No\*     | -                |
+| `hashnode_token`          | Hashnode Personal Access Token            | No\*     | -                |
+| `hashnode_publication_id` | Hashnode Publication ID                   | No       | -                |
+| `medium_path`             | Medium posts directory pattern            | No       | `posts/medium`   |
+| `devto_path`              | Dev.to posts directory pattern            | No       | `posts/devto`    |
+| `hashnode_path`           | Hashnode posts directory pattern          | No       | `posts/hashnode` |
+| `use_commit_message`      | Use commit message for platform detection | No       | `false`          |
+| `dry_run`                 | Run without publishing                    | No       | `false`          |
+| `posts_directory`         | Base directory for posts                  | No       | `.`              |
 
 \*At least one platform token is required.
 
 ### Outputs
 
 | Output            | Description                                |
-| ----------------- | ------------------------------------------ |
+|-------------------|--------------------------------------------|
 | `published-posts` | JSON array of successfully published posts |
 | `failed-posts`    | JSON array of posts that failed to publish |
 
@@ -213,7 +214,7 @@ Then use commit messages like:
 ### Hashnode Token
 
 1. Go to [Hashnode Settings](https://hashnode.com/settings/developer)
-2. Generate a new Personal Access Token
+2. Generate new Personal Access Token (PAT)
 3. Add it to your repository secrets as `HASHNODE_TOKEN`
 4. (Optional) Get your Publication ID and add as `HASHNODE_PUBLICATION_ID`
 
@@ -236,9 +237,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: kodelint/blogs-publisher@v1
         with:
-          medium-token: ${{ secrets.MEDIUM_TOKEN }}
-          devto-token: ${{ secrets.DEVTO_TOKEN }}
-          hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
+          medium_token: ${{ secrets.MEDIUM_TOKEN }}
+          devto_token: ${{ secrets.DEVTO_TOKEN }}
+          hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
 ```
 
 ### Manual Trigger with Dry Run
@@ -250,7 +251,7 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: "Run in dry-run mode"
+        description: "Run in dry_run mode"
         required: false
         default: "true"
 
@@ -261,10 +262,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: kodelint/blogs-publisher@v1
         with:
-          medium-token: ${{ secrets.MEDIUM_TOKEN }}
-          devto-token: ${{ secrets.DEVTO_TOKEN }}
-          hashnode-token: ${{ secrets.HASHNODE_TOKEN }}
-          dry-run: ${{ github.event.inputs.dry_run }}
+          medium_token: ${{ secrets.MEDIUM_TOKEN }}
+          devto_token: ${{ secrets.DEVTO_TOKEN }}
+          hashnode_token: ${{ secrets.HASHNODE_TOKEN }}
+          dry_run: ${{ github.event.inputs.dry_run }}
 ```
 
 ### Selective Publishing
@@ -284,8 +285,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: kodelint/blogs-publisher@v1
         with:
-          medium-token: ${{ secrets.MEDIUM_TOKEN }}
-          use-commit-message: true
+          medium_token: ${{ secrets.MEDIUM_TOKEN }}
+          use_commit_message: true
 ```
 
 ## 🧪 Testing
@@ -322,7 +323,7 @@ The project maintains 80%+ test coverage across:
 #### "No platform determined"
 
 - **Cause**: File path doesn't match any configured patterns and commit message detection is disabled
-- **Solution**: Check your file paths or enable `use-commit-message: true`
+- **Solution**: Check your file paths or enable `use_commit_message: true`
 
 #### "Token not provided"
 
@@ -337,7 +338,7 @@ The project maintains 80%+ test coverage across:
 #### "File not found"
 
 - **Cause**: The markdown file doesn't exist in the specified location
-- **Solution**: Check the file path and `posts-directory` configuration
+- **Solution**: Check the file path and `posts_directory` configuration
 
 ### Debug Mode
 
@@ -348,7 +349,18 @@ Enable debug logging in your workflow:
   with:
     # ... your config
   env:
-    ACTIONS_STEP_DEBUG: true
+    ACTIONS_STEP_DEBUG: true # Native to GitHub Action
+```
+To enable debug mode, set either `true`:
+
+- `ACTIONS_STEP_DEBUG`
+- `DEBUGGING_ENABLED`
+
+> **Note:** I was not able to get `${{ var.ACTIONS_STEP_DEBUG }}` working, 
+so I used it as **secret** `${{ secrets.ACTIONS_RUNNER_DEBUG }}`
+```bash
+        env:
+          ACTIONS_RUNNER_DEBUG: ${{ secrets.ACTIONS_RUNNER_DEBUG }}
 ```
 
 ## 🤝 Contributing
