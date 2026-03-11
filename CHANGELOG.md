@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/kodelint/blogs-publisher/compare/v1.1.0...v1.1.1) (2026-03-11)
+
+
+### Bug Fixes
+
+* package.json & package-lock.json to reduce vulnerabilities ([b39a565](https://github.com/kodelint/blogs-publisher/commit/b39a565e93506d5f302f09f9eeccbfd4957401d2))
+
 # [1.1.0](https://github.com/kodelint/blogs-publisher/compare/v1.0.3...v1.1.0) (2025-08-26)
 
 
